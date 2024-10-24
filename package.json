@@ -48,8 +48,9 @@
   "dependencies": {
     "@oznu/ws-connect": "^2.2.0",
     "fs-extra": "^9.0.1",
+    "hap-node-client": "^0.1.5",
     "rxjs": "^6.6.3",
-    "hap-node-client": "^0.1.5"
+    "semver": "^7.6.3"
   },
   "devDependencies": {
     "@types/express-serve-static-core": "^4.17.30",
@@ -79,5 +80,11 @@
     "env": {
       "NODE_OPTIONS": "--trace-warnings"
     }
-  }
+  },
+  "bundleDependencies": [
+    "@oznu/ws-connect",
+    "fs-extra",
+    "hap-node-client",
+    "rxjs"
+  ]
 }

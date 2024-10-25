@@ -40,16 +40,16 @@
     "gsh"
   ],
   "bundledDependencies": [
-    "@oznu/ws-connect",
+    "@homebridge/hap-client",
+    "@homebridge/ws-connect",
     "fs-extra",
-    "hap-node-client",
     "rxjs"
   ],
   "dependencies": {
+    "@homebridge/hap-client": "^2.0.2",
     "@homebridge/ws-connect": "^3.0.0-beta.0",
     "chalk": "^5.3.0",
     "fs-extra": "^11.2.0",
-    "hap-node-client": "^0.2.10-beta.2",
     "rxjs": "^7.8.1",
     "semver": "^7.6.3"
   },
@@ -79,5 +79,11 @@
     "env": {
       "NODE_OPTIONS": "--trace-warnings"
     }
-  }
+  },
+  "bundleDependencies": [
+    "@oznu/ws-connect",
+    "fs-extra",
+    "hap-node-client",
+    "rxjs"
+  ]
 }

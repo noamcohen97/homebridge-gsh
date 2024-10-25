@@ -1,4 +1,4 @@
-import { HAPNodeJSClient } from 'hap-node-client';
+import { HapClient, ServiceType } from '@homebridge/hap-client';
 import { ServicesTypes, Service, Characteristic } from './hap-types';
 import * as crypto from 'crypto';
 import { Subject } from 'rxjs';
@@ -29,7 +29,7 @@ export class Hap {
   log: Log;
   pin: string;
   config: PluginConfig;
-  homebridge: HAPNodeJSClient;
+  hapClient: HapClient;
   services: HapService[] = [];
 
   public ready: boolean;
@@ -101,7 +101,7 @@ export class Hap {
     this.log.debug('Waiting 15 seconds before starting instance discovery...');
     setTimeout(() => {
       this.discover();
-    }, 15000);
+    }, 1000);
 
     this.reportStateSubject
       .pipe(
@@ -122,27 +122,22 @@ export class Hap {
   /**
    * Homebridge Instance Discovery
    */
+
   async discover() {
-    this.homebridge = new HAPNodeJSClient({
-      debug: this.config.debug,
+    this.hapClient = new HapClient({
+      config: this.config,
       pin: this.pin,
-      timeout: 10,
+      logger: this.log,
     });
 
-    this.homebridge.once('Ready', () => {
-      this.ready = true;
-      this.log.info('Finished instance discovery');
-
+    setTimeout(() => {
+      this.start();
       setTimeout(() => {
         this.requestSync();
       }, 15000);
-    });
+    }, 15000);
 
-    this.homebridge.on('Ready', () => {
-      this.start();
-    });
-
-    this.homebridge.on('hapEvent', ((event) => {
+    this.hapClient.on('hapEvent', ((event) => {
       this.handleHapEvent(event);
     }));
   }
@@ -151,7 +146,8 @@ export class Hap {
    * Start processing
    */
   async start() {
-    await this.getAccessories();
+    this.services = await this.loadAccessories();
+    this.log.info(`Discovered ${this.services.length} accessories`);
     await this.buildSyncResponse();
     await this.registerCharacteristicEventHandlers();
   }
@@ -161,7 +157,8 @@ export class Hap {
    */
   async buildSyncResponse() {
     const devices = this.services.map((service) => {
-      return this.types[service.serviceType].sync(service);
+      console.log(service);
+      return this.types[service.type].sync(service);
     });
     return devices;
   }
@@ -230,8 +227,10 @@ export class Hap {
             // process the request
             const { payload, states } = this.types[service.serviceType].execute(service, command);
 
+            //TODO: migrate
+            /*
             await new Promise((resolve, reject) => {
-              this.homebridge.HAPcontrol(service.instance.ipAddress, service.instance.port, JSON.stringify(payload), (err) => {
+              this.hapClient.HAPcontrol(service.instance.ipAddress, service.instance.port, JSON.stringify(payload), (err) => {
                 if (!err) {
                   response.push({
                     ids: [device.id],
@@ -247,8 +246,9 @@ export class Hap {
                   });
                 }
                 return resolve(undefined);
-              });
+              }, service.instance);
             });
+            */
           }
 
         }
@@ -265,20 +265,23 @@ export class Hap {
     const iids: number[] = service.characteristics.map(c => c.iid);
 
     const body = '?id=' + iids.map(iid => `${service.aid}.${iid}`).join(',');
-
+    this.log.debug(`Requesting status for ${service.serviceName} ${service.instance.username}`);
+    //TODO: migrate
+    /*
     const characteristics = await new Promise((resolve, reject) => {
-      this.homebridge.HAPstatus(service.instance.ipAddress, service.instance.port, body, (err, status) => {
+      this.hapClient.HAPstatus(service.instance.ipAddress, service.instance.port, body, (err, status) => {
         if (err) {
           return reject(err);
         }
         return resolve(status.characteristics);
-      });
+      }, service.instance);
     }) as Array<HapCharacteristic>;
 
     for (const c of characteristics) {
       const characteristic = service.characteristics.find(x => x.iid === c.iid);
       characteristic.value = c.value;
     }
+    */
   }
 
   /**
@@ -286,23 +289,29 @@ export class Hap {
    */
   private async checkInstanceConnection(instance: HapInstance): Promise<boolean> {
     return new Promise((resolve) => {
-      this.homebridge.HAPcontrol(instance.ipAddress, instance.instance.port, JSON.stringify(
+      this.log.debug(`Checking connection to ${instance}`);
+      /*
+      console.log(JSON.stringify(instance));
+      this.hapClient.HAPcontrol(instance.ipAddress, instance.instance.port, JSON.stringify(
         { characteristics: [{ aid: -1, iid: -1 }] },
       ), (err) => {
         if (err) {
           return resolve(false);
         }
         return resolve(true);
-      });
+      }, instance.instance);
+      */
     });
   }
 
   /**
    * Load accessories from Homebridge
    */
+
+  /*
   async getAccessories() {
     return new Promise((resolve, reject) => {
-      this.homebridge.HAPaccessories(async (instances: HapInstance[]) => {
+      this.hapClient.HAPaccessories(async (instances: HapInstance[]) => {
         this.services = [];
 
         for (const instance of instances) {
@@ -320,6 +329,26 @@ export class Hap {
         return resolve(true);
       });
     });
+  }
+  */
+  /**
+   * Load all the accessories from Homebridge
+   */
+  public async loadAccessories(): Promise<ServiceType[]> {
+    //  if (!this.configService.homebridgeInsecureMode) {
+    //    throw new BadRequestException('Homebridge must be running in insecure mode to access accessories.')
+    //  }
+
+    return this.hapClient.getAllServices().then((services) => {
+      return services
+    }).catch((e) => {
+      if (e.response?.status === 401) {
+        this.log.warn('Homebridge must be running in insecure mode to view and control accessories from this plugin.')
+      } else {
+        this.log.error(`Failed load accessories from Homebridge: ${e.message}`)
+      }
+      return []
+    })
   }
 
   /**
@@ -435,10 +464,11 @@ export class Hap {
     }
 
     // start listeners
+    /*
     for (const instance of this.evInstances) {
       const unregistered = instance.evCharacteristics.filter(x => !x.registered);
       if (unregistered.length) {
-        this.homebridge.HAPevent(instance.ipAddress, instance.port, JSON.stringify({
+        this.hapClient.HAPevent(instance.ipAddress, instance.port, JSON.stringify({
           characteristics: instance.evCharacteristics.filter(x => !x.registered),
         }), (err, response) => {
           if (err) {
@@ -451,9 +481,10 @@ export class Hap {
             });
             this.log.debug('HAP Event listeners registered succesfully');
           }
-        });
+        }, instance);
       }
     }
+    */
   }
 
   /**

@@ -48,10 +48,10 @@ export interface HapCharacteristic {
 export interface HapService {
   iid: number;
   type: string;
-  characteristics: HapCharacteristic[];
-  primary: boolean;
-  hidden: boolean;
-  serialNumber: string;
+  characteristics?: HapCharacteristic[];
+  primary?: boolean;
+  hidden?: boolean;
+  serialNumber?: string;
 
   // custom  
   uniqueId?: string;

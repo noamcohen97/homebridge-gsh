@@ -2,6 +2,12 @@
 
 All notable changes to `homebridge-gsh` will be documented in this file. This project tries to adhere to [Semantic Versioning](http://semver.org/).
 
+## v3.1.0 (2024-11-27)
+
+### Changes
+
+- Updated dependent software packages
+
 ## v3.0.0 (2024-10-27)
 
 Recently Oznu annouced that he no longer had the resources or free time required to maintain this plugin. So we worked with him to transfer the operational assets of the service over to us, so that we could continue to offer this service for Google Home users.

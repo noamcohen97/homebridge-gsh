@@ -23,8 +23,8 @@
     "prepublishOnly": "npm run build"
   },
   "engines": {
-    "node": ">=10.17.0",
-    "homebridge": ">=1.0.0"
+    "homebridge": "^1.6.0 || ^2.0.0-beta.0",
+    "node": "^18.20.4 || ^20.15.1 || ^22.0.0"
   },
   "keywords": [
     "homebridge-plugin",
@@ -46,28 +46,27 @@
     "rxjs"
   ],
   "dependencies": {
-    "@oznu/ws-connect": "^2.2.0",
-    "fs-extra": "^9.0.1",
-    "hap-node-client": "^0.1.5",
-    "rxjs": "^6.6.3",
+    "@homebridge/ws-connect": "^3.0.0-beta.0",
+    "chalk": "^5.3.0",
+    "fs-extra": "^11.2.0",
+    "hap-node-client": "^0.2.10-beta.2",
+    "rxjs": "^7.8.1",
     "semver": "^7.6.3"
   },
   "devDependencies": {
-    "@types/express-serve-static-core": "^4.17.30",
-    "@types/fs-extra": "^9.0.2",
-    "@types/node": "^14.11.8",
-    "@types/ws": "^7.2.7",
-    "@typescript-eslint/eslint-plugin": "^4.4.1",
-    "@typescript-eslint/parser": "^4.4.1",
-    "actions-on-google": "^2.13.0",
-    "eslint": "^7.11.0",
-    "hap-nodejs": "^0.8.2",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.7.9",
+    "@types/ws": "^8.5.12",
+    "@typescript-eslint/eslint-plugin": "^8.11.0",
+    "@typescript-eslint/parser": "^8.11.0",
+    "actions-on-google": "^3.0.0",
+    "eslint": "^9.13.0",
+    "hap-nodejs": "^1.1.0",
     "homebridge": "^1.8.4",
-    "nodemon": "^2.0.5",
-    "request-promise": "^4.2.6",
-    "rimraf": "^3.0.2",
-    "ts-node": "^9.0.0",
-    "typescript": "^4.0.3"
+    "nodemon": "^3.1.7",
+    "rimraf": "^5.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
   },
   "nodemonConfig": {
     "watch": [
@@ -75,16 +74,10 @@
     ],
     "ext": "ts",
     "ignore": [],
-    "exec": "tsc && DEBUG= homebridge -U ./test/hbConfig -T -D -P .",
+    "exec": "tsc && DEBUG= homebridge -U ./test/hbConfig -T -D -I",
     "signal": "SIGTERM",
     "env": {
       "NODE_OPTIONS": "--trace-warnings"
     }
-  },
-  "bundleDependencies": [
-    "@oznu/ws-connect",
-    "fs-extra",
-    "hap-node-client",
-    "rxjs"
-  ]
+  }
 }

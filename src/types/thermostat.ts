@@ -1,5 +1,6 @@
 import { Characteristic } from '../hap-types';
-import { HapService, AccessoryTypeExecuteResponse } from '../interfaces';
+import { ServiceType } from '@homebridge/hap-client';
+import { AccessoryTypeExecuteResponse } from '../interfaces';
 import { Hap } from '../hap';
 
 export class Thermostat {
@@ -7,11 +8,11 @@ export class Thermostat {
     private hap: Hap,
   ) { }
 
-  sync(service: HapService) {
+  sync(service: ServiceType) {
     const availableThermostatModes = ['off', 'heat', 'cool'];
 
-    if (service.characteristics.find(x => x.type === Characteristic.CoolingThresholdTemperature) &&
-      service.characteristics.find(x => x.type === Characteristic.HeatingThresholdTemperature)) {
+    if (service.serviceCharacteristics.find(x => x.uuid === Characteristic.CoolingThresholdTemperature) &&
+      service.serviceCharacteristics.find(x => x.uuid === Characteristic.HeatingThresholdTemperature)) {
       availableThermostatModes.push('heatcool');
     } else {
       availableThermostatModes.push('auto');
@@ -26,7 +27,7 @@ export class Thermostat {
       attributes: {
         availableThermostatModes: availableThermostatModes.join(','),
         thermostatTemperatureUnit: this.hap.config.forceFahrenheit ? 'F'
-          : service.characteristics.find(x => x.type === Characteristic.TemperatureDisplayUnits).value ? 'F' : 'C',
+          : service.serviceCharacteristics.find(x => x.uuid === Characteristic.TemperatureDisplayUnits).value ? 'F' : 'C',
       },
       name: {
         defaultNames: [
@@ -51,39 +52,39 @@ export class Thermostat {
     };
   }
 
-  query(service: HapService) {
-    const targetHeatingCoolingState = service.characteristics.find(x => x.type === Characteristic.TargetHeatingCoolingState).value;
+  query(service: ServiceType) {
+    const targetHeatingCoolingState: number = Number(service.serviceCharacteristics.find(x => x.uuid === Characteristic.TargetHeatingCoolingState).value);
     const thermostatMode = ['off', 'heat', 'cool', 'auto'][targetHeatingCoolingState];
 
     const response = {
       online: true,
       thermostatMode,
-      thermostatTemperatureSetpoint: service.characteristics.find(x => x.type === Characteristic.TargetTemperature).value,
-      thermostatTemperatureAmbient: service.characteristics.find(x => x.type === Characteristic.CurrentTemperature).value,
+      thermostatTemperatureSetpoint: service.serviceCharacteristics.find(x => x.uuid === Characteristic.TargetTemperature).value,
+      thermostatTemperatureAmbient: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentTemperature).value,
     } as any;
 
     // check if device reports CurrentRelativeHumidity
-    if (service.characteristics.find(x => x.type === Characteristic.CurrentRelativeHumidity)) {
-      response.thermostatHumidityAmbient = service.characteristics.find(x => x.type === Characteristic.CurrentRelativeHumidity).value;
+    if (service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentRelativeHumidity)) {
+      response.thermostatHumidityAmbient = service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentRelativeHumidity).value;
     }
 
     // check if device reports CoolingThresholdTemperature and HeatingThresholdTemperature
-    if (service.characteristics.find(x => x.type === Characteristic.CoolingThresholdTemperature) &&
-      service.characteristics.find(x => x.type === Characteristic.HeatingThresholdTemperature)) {
+    if (service.serviceCharacteristics.find(x => x.uuid === Characteristic.CoolingThresholdTemperature) &&
+      service.serviceCharacteristics.find(x => x.uuid === Characteristic.HeatingThresholdTemperature)) {
 
       // translate mode
       if (response.thermostatMode === 'auto') {
         response.thermostatMode = 'heatcool';
       }
 
-      response.thermostatTemperatureSetpointLow = service.characteristics.find(x => x.type === Characteristic.HeatingThresholdTemperature).value;
-      response.thermostatTemperatureSetpointHigh = service.characteristics.find(x => x.type === Characteristic.CoolingThresholdTemperature).value;
+      response.thermostatTemperatureSetpointLow = service.serviceCharacteristics.find(x => x.uuid === Characteristic.HeatingThresholdTemperature).value;
+      response.thermostatTemperatureSetpointHigh = service.serviceCharacteristics.find(x => x.uuid === Characteristic.CoolingThresholdTemperature).value;
     }
 
     return response;
   }
 
-  execute(service: HapService, command): AccessoryTypeExecuteResponse {
+  execute(service: ServiceType, command): AccessoryTypeExecuteResponse {
     if (!command.execution.length) {
       return { payload: { characteristics: [] } };
     }
@@ -100,7 +101,7 @@ export class Thermostat {
         const payload = {
           characteristics: [{
             aid: service.aid,
-            iid: service.characteristics.find(x => x.type === Characteristic.TargetHeatingCoolingState).iid,
+            iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.TargetHeatingCoolingState).iid,
             value: mode[command.execution[0].params.thermostatMode],
           }],
         };
@@ -110,7 +111,7 @@ export class Thermostat {
         const payload = {
           characteristics: [{
             aid: service.aid,
-            iid: service.characteristics.find(x => x.type === Characteristic.TargetTemperature).iid,
+            iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.TargetTemperature).iid,
             value: command.execution[0].params.thermostatTemperatureSetpoint,
           }],
         };
@@ -121,12 +122,12 @@ export class Thermostat {
           characteristics: [
             {
               aid: service.aid,
-              iid: service.characteristics.find(x => x.type === Characteristic.CoolingThresholdTemperature).iid,
+              iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CoolingThresholdTemperature).iid,
               value: command.execution[0].params.thermostatTemperatureSetpointHigh,
             },
             {
               aid: service.aid,
-              iid: service.characteristics.find(x => x.type === Characteristic.HeatingThresholdTemperature).iid,
+              iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.HeatingThresholdTemperature).iid,
               value: command.execution[0].params.thermostatTemperatureSetpointLow,
             }],
         };

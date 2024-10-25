@@ -1,14 +1,15 @@
 import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { Characteristic } from '../hap-types';
-import { HapService, AccessoryTypeExecuteResponse } from '../interfaces';
+import { AccessoryTypeExecuteResponse } from '../interfaces';
 import { Hap } from '../hap';
+import { ServiceType } from '@homebridge/hap-client';
 
 export class TemperatureSensor {
   constructor(
     private hap: Hap,
   ) { }
 
-  sync(service: HapService): SmartHomeV1SyncDevices {
+  sync(service: ServiceType): SmartHomeV1SyncDevices {
     return {
       id: service.uniqueId,
       type: 'action.devices.types.SENSOR',
@@ -44,15 +45,15 @@ export class TemperatureSensor {
     };
   }
 
-  query(service: HapService) {
+  query(service: ServiceType) {
     return {
       online: true,
-      temperatureSetpointCelsius: service.characteristics.find(x => x.type === Characteristic.CurrentTemperature)?.value,
-      temperatureAmbientCelsius: service.characteristics.find(x => x.type === Characteristic.CurrentTemperature)?.value,
+      temperatureSetpointCelsius: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentTemperature)?.value,
+      temperatureAmbientCelsius: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentTemperature)?.value,
     } as any;
   }
 
-  execute(service: HapService, command: SmartHomeV1ExecuteRequestCommands): AccessoryTypeExecuteResponse {
+  execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): AccessoryTypeExecuteResponse {
     return { payload: { characteristics: [] } };
   }
 

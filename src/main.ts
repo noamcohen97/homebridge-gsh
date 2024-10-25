@@ -96,7 +96,7 @@ export class Plugin {
       return this.deviceNotReady(body);
     }
 
-    this.log.debug(devices);
+    // this.log.debug(devices);
 
     return {
       requestId: body.requestId,

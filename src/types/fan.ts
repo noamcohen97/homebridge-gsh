@@ -1,8 +1,9 @@
 import { Characteristic } from '../hap-types';
-import { HapService, AccessoryTypeExecuteResponse } from '../interfaces';
+import { AccessoryTypeExecuteResponse } from '../interfaces';
+import { ServiceType } from '@homebridge/hap-client';
 
 export class Fan {
-  sync(service: HapService) {
+  sync(service: ServiceType) {
 
     return {
       id: service.uniqueId,
@@ -33,14 +34,14 @@ export class Fan {
     };
   }
 
-  query(service: HapService) {
+  query(service: ServiceType) {
     return {
-      on: service.characteristics.find(x => x.type === Characteristic.On).value ? true : false,
+      on: service.serviceCharacteristics.find(x => x.uuid === Characteristic.On).value ? true : false,
       online: true,
     };
   }
 
-  execute(service: HapService, command): AccessoryTypeExecuteResponse {
+  execute(service: ServiceType, command): AccessoryTypeExecuteResponse {
     if (!command.execution.length) {
       return { payload: { characteristics: [] } };
     }
@@ -50,7 +51,7 @@ export class Fan {
         const payload = {
           characteristics: [{
             aid: service.aid,
-            iid: service.characteristics.find(x => x.type === Characteristic.On).iid,
+            iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.On).iid,
             value: command.execution[0].params.on,
           }],
         };

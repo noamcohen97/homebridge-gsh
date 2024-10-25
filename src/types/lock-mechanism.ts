@@ -1,10 +1,11 @@
 import { Characteristic } from '../hap-types';
-import { HapService, AccessoryTypeExecuteResponse } from '../interfaces';
+import { AccessoryTypeExecuteResponse } from '../interfaces';
+import { ServiceType } from '@homebridge/hap-client';
 
 export class LockMechanism {
   public twoFactorRequired = true;
 
-  sync(service: HapService) {
+  sync(service: ServiceType) {
     return {
       id: service.uniqueId,
       type: 'action.devices.types.LOCK',
@@ -34,12 +35,12 @@ export class LockMechanism {
     };
   }
 
-  query(service: HapService) {
+  query(service: ServiceType) {
     const response = {
       online: true,
     } as any;
 
-    const currentLockState = service.characteristics.find(x => x.type === Characteristic.LockCurrentState).value;
+    const currentLockState = service.serviceCharacteristics.find(x => x.uuid === Characteristic.LockCurrentState).value;
 
     switch (currentLockState) {
       case (0): {
@@ -67,7 +68,7 @@ export class LockMechanism {
     return response;
   }
 
-  execute(service: HapService, command): AccessoryTypeExecuteResponse {
+  execute(service: ServiceType, command): AccessoryTypeExecuteResponse {
     if (!command.execution.length) {
       return { payload: { characteristics: [] } };
     }
@@ -77,7 +78,7 @@ export class LockMechanism {
         const payload = {
           characteristics: [{
             aid: service.aid,
-            iid: service.characteristics.find(x => x.type === Characteristic.LockTargetState).iid,
+            iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.LockTargetState).iid,
             value: command.execution[0].params.lock ? 1 : 0,
           }],
         };

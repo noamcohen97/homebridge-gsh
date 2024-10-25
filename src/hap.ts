@@ -4,7 +4,7 @@ import * as crypto from 'crypto';
 import { Subject } from 'rxjs';
 import { debounceTime, map } from 'rxjs/operators';
 
-import { PluginConfig, HapInstance, HapService, HapCharacteristic, Instance } from './interfaces';
+import { PluginConfig, HapInstance, Instance } from './interfaces';
 import { toLongFormUUID } from './uuid';
 import { Log } from './logger';
 
@@ -30,11 +30,12 @@ export class Hap {
   pin: string;
   config: PluginConfig;
   hapClient: HapClient;
-  services: HapService[] = [];
+  services: ServiceType[] = [];
+  discoveryTimeout: NodeJS.Timeout;
 
   public ready: boolean;
 
-  /* init types */
+  /* GSH Supported types */
   types = {
     Door: new Door(),
     Fan: new Fan(),
@@ -56,7 +57,7 @@ export class Hap {
 
   /* event tracking */
   evInstances: Instance[] = [];
-  evServices: HapService[] = [];
+  evServices: ServiceType[] = [];
   reportStateSubject = new Subject();
   pendingStateReport = [];
 
@@ -130,16 +131,27 @@ export class Hap {
       logger: this.log,
     });
 
-    setTimeout(() => {
-      this.start();
-      setTimeout(() => {
-        this.requestSync();
-      }, 15000);
-    }, 15000);
+    this.waitForNoMoreDiscoveries();
+    this.hapClient.on('instance-discovered', this.waitForNoMoreDiscoveries)
 
     this.hapClient.on('hapEvent', ((event) => {
       this.handleHapEvent(event);
     }));
+  }
+
+  waitForNoMoreDiscoveries = () => {
+    // Clear any existing timeout
+    if (this.discoveryTimeout) clearTimeout(this.discoveryTimeout);
+
+    // Set up the timeout
+    this.discoveryTimeout = setTimeout(() => {
+      this.log.debug('No more instances discovered, publishing services');
+      this.hapClient.removeListener('instance-discovered', this.waitForNoMoreDiscoveries);
+      this.start();
+      setTimeout(() => {
+        this.requestSync();
+      }, 15000);
+    }, 5000);
   }
 
   /**
@@ -148,6 +160,7 @@ export class Hap {
   async start() {
     this.services = await this.loadAccessories();
     this.log.info(`Discovered ${this.services.length} accessories`);
+    this.ready = true;
     await this.buildSyncResponse();
     await this.registerCharacteristicEventHandlers();
   }
@@ -157,7 +170,11 @@ export class Hap {
    */
   async buildSyncResponse() {
     const devices = this.services.map((service) => {
-      console.log(service);
+      if (!this.types[service.type]) {
+        // this.log.debug(`Unsupported service type ${service.type}`);
+        return;
+      }
+      // console.log('buildSyncResponse', service);
       return this.types[service.type].sync(service);
     });
     return devices;
@@ -184,7 +201,7 @@ export class Hap {
       const service = this.services.find(x => x.uniqueId === device.id);
       if (service) {
         await this.getStatus(service);
-        response[device.id] = this.types[service.serviceType].query(service);
+        response[device.id] = this.types[service.type].query(service);
       } else {
         response[device.id] = {};
       }
@@ -208,8 +225,8 @@ export class Hap {
         if (service) {
 
           // check if two factor auth is required, and if we have it
-          if (this.config.twoFactorAuthPin && this.types[service.serviceType].twoFactorRequired &&
-            this.types[service.serviceType].is2faRequired(command) &&
+          if (this.config.twoFactorAuthPin && this.types[service.type].twoFactorRequired &&
+            this.types[service.type].is2faRequired(command) &&
             !(command.execution.length && command.execution[0].challenge &&
               command.execution[0].challenge.pin === this.config.twoFactorAuthPin.toString()
             )
@@ -225,30 +242,20 @@ export class Hap {
             });
           } else {
             // process the request
-            const { payload, states } = this.types[service.serviceType].execute(service, command);
+            if (await this.types[service.type].execute(service, command)) {
+              response.push({
+                ids: [device.id],
+                status: 'SUCCESS',
+                //TODO:            states,
+              });
+              this.log.error('execute STATES not implemented');
+            } else {
+              response.push({
+                ids: [device.id],
+                status: 'ERROR',
+              });
+            }
 
-            //TODO: migrate
-            /*
-            await new Promise((resolve, reject) => {
-              this.hapClient.HAPcontrol(service.instance.ipAddress, service.instance.port, JSON.stringify(payload), (err) => {
-                if (!err) {
-                  response.push({
-                    ids: [device.id],
-                    status: 'SUCCESS',
-                    states,
-                  });
-                } else {
-                  this.log.error('Failed to control an accessory. Make sure all your Homebridge instances are using the same PIN.');
-                  this.log.error(err.message);
-                  response.push({
-                    ids: [device.id],
-                    status: 'ERROR',
-                  });
-                }
-                return resolve(undefined);
-              }, service.instance);
-            });
-            */
           }
 
         }
@@ -262,10 +269,11 @@ export class Hap {
    * @param service
    */
   async getStatus(service) {
-    const iids: number[] = service.characteristics.map(c => c.iid);
+    const iids: number[] = service.serviceCharacteristics.map(c => c.iid);
 
     const body = '?id=' + iids.map(iid => `${service.aid}.${iid}`).join(',');
     this.log.debug(`Requesting status for ${service.serviceName} ${service.instance.username}`);
+    this.log.error('getStatus not implemented');
     //TODO: migrate
     /*
     const characteristics = await new Promise((resolve, reject) => {
@@ -278,7 +286,7 @@ export class Hap {
     }) as Array<HapCharacteristic>;
 
     for (const c of characteristics) {
-      const characteristic = service.characteristics.find(x => x.iid === c.iid);
+      const characteristic = service.serviceCharacteristics.find(x => x.iid === c.iid);
       characteristic.value = c.value;
     }
     */
@@ -290,6 +298,7 @@ export class Hap {
   private async checkInstanceConnection(instance: HapInstance): Promise<boolean> {
     return new Promise((resolve) => {
       this.log.debug(`Checking connection to ${instance}`);
+      this.log.error('checkInstanceConnection not implemented');
       /*
       console.log(JSON.stringify(instance));
       this.hapClient.HAPcontrol(instance.ipAddress, instance.instance.port, JSON.stringify(
@@ -340,6 +349,7 @@ export class Hap {
     //  }
 
     return this.hapClient.getAllServices().then((services) => {
+      services = services.filter(x => this.types[x.type] !== undefined);
       return services
     }).catch((e) => {
       if (e.response?.status === 401) {
@@ -355,12 +365,13 @@ export class Hap {
    * Parse accessories from homebridge and filter out the ones we support
    * @param instance
    */
+  /*
   async parseAccessories(instance: HapInstance) {
     instance.accessories.accessories.forEach((accessory) => {
-      /** Ensure UUIDs are long form */
+      // Ensure UUIDs are long form 
       for (const service of accessory.services) {
         service.type = toLongFormUUID(service.type);
-        for (const characteristic of service.characteristics) {
+        for (const characteristic of service.serviceCharacteristics) {
           characteristic.type = toLongFormUUID(characteristic.type);
         }
       }
@@ -369,8 +380,8 @@ export class Hap {
       const accessoryInformationService = accessory.services.find(x => x.type === Service.AccessoryInformation);
       const accessoryInformation = {};
 
-      if (accessoryInformationService && accessoryInformationService.characteristics) {
-        accessoryInformationService.characteristics.forEach((c) => {
+      if (accessoryInformationService && accessoryInformationservice.serviceCharacteristics) {
+        accessoryInformationservice.serviceCharacteristics.forEach((c) => {
           if (c.value) {
             accessoryInformation[c.description] = c.value;
           }
@@ -385,7 +396,7 @@ export class Hap {
         .forEach((service) => {
           service.accessoryInformation = accessoryInformation;
           service.aid = accessory.aid;
-          service.serviceType = ServicesTypes[service.type];
+          service.type = ServicesTypes[service.type];
 
           service.instance = {
             ipAddress: instance.ipAddress,
@@ -399,13 +410,13 @@ export class Hap {
             .digest('hex');
 
           // discover name of service
-          const serviceNameCharacteristic = service.characteristics.find(x => [
+          const serviceNameCharacteristic = service.serviceCharacteristics.find(x => [
             Characteristic.Name,
             Characteristic.ConfiguredName,
           ].includes(x.type));
 
           service.serviceName = (serviceNameCharacteristic && serviceNameCharacteristic.value.length) ?
-            serviceNameCharacteristic.value : service.accessoryInformation.Name || service.serviceType;
+            serviceNameCharacteristic.value : service.accessoryInformation.Name || service.type;
 
           // perform user-defined name replacements
           const nameMap = this.deviceNameMap.find(x => x.replace === service.serviceName);
@@ -426,9 +437,9 @@ export class Hap {
           }
 
           // if 2fa is forced for this service type, but a pin has not been set ignore the service
-          if (this.types[service.serviceType].twoFactorRequired && !this.config.twoFactorAuthPin && !this.config.disablePinCodeRequirement) {
+          if (this.types[service.type].twoFactorRequired && !this.config.twoFactorAuthPin && !this.config.disablePinCodeRequirement) {
             this.log.warn(`Not registering ${service.serviceName} - Pin cide has not been set and is required for secure ` +
-              `${service.serviceType} accessory types. See https://git.io/JUQWX`);
+              `${service.type} accessory types. See https://git.io/JUQWX`);
             return;
           }
 
@@ -436,33 +447,46 @@ export class Hap {
         });
     });
   }
+  */
 
   /**
    * Register hap characteristic event handlers
    */
   async registerCharacteristicEventHandlers() {
-    for (const service of this.services) {
-      // get a list of characteristics we can watch
-      const evCharacteristics = service.characteristics.filter(x => x.perms.includes('ev') && this.evTypes.includes(x.type));
+    const monitor = await this.hapClient.monitorCharacteristics();
+    monitor.on('service-update', (events) => {
+      this.handleHapEvent(events);
+    });
 
-      if (evCharacteristics.length) {
-        // register the instance if it's not already there
-        if (!this.evInstances.find(x => x.username === service.instance.username)) {
-          const newInstance = Object.assign({}, service.instance);
-          newInstance.evCharacteristics = [];
-          this.evInstances.push(newInstance);
-        }
+    this.log.error('Registered HAP Event listeners not implemented');
 
-        const instance = this.evInstances.find(x => x.username === service.instance.username);
 
-        for (const evCharacteristic of evCharacteristics) {
-          if (!instance.evCharacteristics.find(x => x.aid === service.aid && x.iid === evCharacteristic.iid)) {
-            instance.evCharacteristics.push({ aid: service.aid, iid: evCharacteristic.iid, ev: true });
+
+    /*
+        for (const service of this.services) {
+          // get a list of characteristics we can watch
+          console.log('registerCharacteristicEventHandlers: service', service);
+          const evCharacteristics = service.serviceCharacteristics.filter(x => x.ev && this.evTypes.includes(x.type));
+    
+          if (evCharacteristics.length) {
+            // register the instance if it's not already there
+            if (!this.evInstances.find(x => x.username === service.instance.username)) {
+              const newInstance = Object.assign({}, service.instance);
+              newInstance.evCharacteristics = [];
+              this.evInstances.push(newInstance);
+            }
+    
+            const instance = this.evInstances.find(x => x.username === service.instance.username);
+    
+            for (const evCharacteristic of evCharacteristics) {
+              if (!instance.evCharacteristics.find(x => x.aid === service.aid && x.iid === evCharacteristic.iid)) {
+                instance.evCharacteristics.push({ aid: service.aid, iid: evCharacteristic.iid, ev: true });
+              }
+            }
           }
-        }
-      }
-    }
-
+     
+  }
+     */
     // start listeners
     /*
     for (const instance of this.evInstances) {
@@ -495,9 +519,9 @@ export class Hap {
     for (const event of events) {
       const accessories = this.services.filter(s =>
         s.instance.ipAddress === event.host && s.instance.port === event.port && s.aid === event.aid);
-      const service = accessories.find(x => x.characteristics.find(c => c.iid === event.iid));
+      const service = accessories.find(x => x.serviceCharacteristics.find(c => c.iid === event.iid));
       if (service) {
-        const characteristic = service.characteristics.find(c => c.iid === event.iid);
+        const characteristic = service.serviceCharacteristics.find(c => c.iid === event.iid);
         characteristic.value = event.value;
         this.reportStateSubject.next(service.uniqueId);
       }
@@ -513,7 +537,7 @@ export class Hap {
 
     for (const uniqueId of pendingStateReport) {
       const service = this.services.find(x => x.uniqueId === uniqueId);
-      states[service.uniqueId] = this.types[service.serviceType].query(service);
+      states[service.uniqueId] = this.types[service.type].query(service);
     }
 
     return await this.sendStateReport(states);
@@ -526,10 +550,12 @@ export class Hap {
     if (!this.services.length) {
       return;
     }
-
-    for (const service of this.services) {
-      states[service.uniqueId] = this.types[service.serviceType].query(service);
-    }
+    this.services.map((service) => {
+      if (!this.types[service.type]) {
+        return;
+      }
+      return states[service.uniqueId] = this.types[service.type].query(service);
+    });
     return await this.sendStateReport(states);
   }
 

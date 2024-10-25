@@ -1,11 +1,12 @@
 import { Characteristic } from '../hap-types';
-import { HapService, AccessoryTypeExecuteResponse } from '../interfaces';
+import { AccessoryTypeExecuteResponse } from '../interfaces';
+import { ServiceType } from '@homebridge/hap-client';
 
 export class SecuritySystem {
   public twoFactorRequired = true;
   public returnStateOnExecute = true;
 
-  sync(service: HapService) {
+  sync(service: ServiceType) {
     return {
       id: service.uniqueId,
       type: 'action.devices.types.SECURITYSYSTEM',
@@ -70,7 +71,7 @@ export class SecuritySystem {
     };
   }
 
-  query(service: HapService) {
+  query(service: ServiceType) {
     const availableSystemCurrentStates = ['HOME', 'AWAY', 'NIGHT', 'OFF'];
 
     const response = {
@@ -79,7 +80,7 @@ export class SecuritySystem {
       status: 'SUCCESS',
     } as any;
 
-    const securitySystemCurrentState = service.characteristics.find(x => x.type === Characteristic.SecuritySystemCurrentState).value;
+    const securitySystemCurrentState: number = Number(service.serviceCharacteristics.find(x => x.uuid === Characteristic.SecuritySystemCurrentState).value);
 
     const currentArmLevel = availableSystemCurrentStates[securitySystemCurrentState];
 
@@ -93,7 +94,7 @@ export class SecuritySystem {
     return response;
   }
 
-  execute(service: HapService, command): AccessoryTypeExecuteResponse {
+  execute(service: ServiceType, command): AccessoryTypeExecuteResponse {
     if (!command.execution.length) {
       return { payload: { characteristics: [] } };
     }
@@ -118,7 +119,7 @@ export class SecuritySystem {
         const payload = {
           characteristics: [{
             aid: service.aid,
-            iid: service.characteristics.find(x => x.type === Characteristic.SecuritySystemTargetState).iid,
+            iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.SecuritySystemTargetState).iid,
             value: securitySystemTargetState,
           }],
         };

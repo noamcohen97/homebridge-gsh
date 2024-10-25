@@ -1,8 +1,9 @@
 import { Characteristic } from '../hap-types';
-import { HapService, AccessoryTypeExecuteResponse } from '../interfaces';
+import { AccessoryTypeExecuteResponse } from '../interfaces';
+import { ServiceType } from '@homebridge/hap-client';
 
 export class Television {
-  sync(service: HapService) {
+  sync(service: ServiceType) {
     return {
       id: service.uniqueId,
       type: 'action.devices.types.TV',
@@ -32,14 +33,14 @@ export class Television {
     };
   }
 
-  query(service: HapService) {
+  query(service: ServiceType) {
     return {
-      on: service.characteristics.find(x => x.type === Characteristic.Active).value ? true : false,
+      on: service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active).value ? true : false,
       online: true,
     };
   }
 
-  execute(service: HapService, command): AccessoryTypeExecuteResponse {
+  execute(service: ServiceType, command): AccessoryTypeExecuteResponse {
     if (!command.execution.length) {
       return { payload: { characteristics: [] } };
     }
@@ -49,7 +50,7 @@ export class Television {
         const payload = {
           characteristics: [{
             aid: service.aid,
-            iid: service.characteristics.find(x => x.type === Characteristic.Active).iid,
+            iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active).iid,
             value: command.execution[0].params.on ? 1 : 0,
           }],
         };

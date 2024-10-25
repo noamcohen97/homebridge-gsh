@@ -1,11 +1,12 @@
 import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { Characteristic } from '../hap-types';
-import { HapService, AccessoryTypeExecuteResponse } from '../interfaces';
+import { AccessoryTypeExecuteResponse } from '../interfaces';
+import { ServiceType } from '@homebridge/hap-client';
 
 export class GarageDoorOpener {
   public twoFactorRequired = true;
 
-  sync(service: HapService): SmartHomeV1SyncDevices {
+  sync(service: ServiceType): SmartHomeV1SyncDevices {
     return {
       id: service.uniqueId,
       type: 'action.devices.types.GARAGE',
@@ -40,12 +41,12 @@ export class GarageDoorOpener {
     };
   }
 
-  query(service: HapService) {
+  query(service: ServiceType) {
     /**
      * GSH impliments garrage door as an open percentage, while HomeKit impliments it as open/closed/opening/closing
      * To work around this we just set the values to something that works.
      */
-    const currentDoorState = service.characteristics.find(x => x.type === Characteristic.CurrentDoorState).value;
+    const currentDoorState: number = Number(service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentDoorState).value);
     // open, closed, opening, closing, stopped
     const openPercent = [100, 0, 50, 50, 50, 50][currentDoorState];
 
@@ -56,7 +57,7 @@ export class GarageDoorOpener {
     } as any;
   }
 
-  execute(service: HapService, command: SmartHomeV1ExecuteRequestCommands): AccessoryTypeExecuteResponse {
+  execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): AccessoryTypeExecuteResponse {
     if (!command.execution.length) {
       return { payload: { characteristics: [] } };
     }
@@ -66,7 +67,7 @@ export class GarageDoorOpener {
         const payload = {
           characteristics: [{
             aid: service.aid,
-            iid: service.characteristics.find(x => x.type === Characteristic.TargetDoorState).iid,
+            iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.TargetDoorState).iid,
             value: command.execution[0].params.openPercent ? 0 : 1,
           }],
         };

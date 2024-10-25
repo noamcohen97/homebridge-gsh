@@ -1,9 +1,10 @@
 
 import { Characteristic } from '../hap-types';
-import { HapService, AccessoryTypeExecuteResponse } from '../interfaces';
+import { AccessoryTypeExecuteResponse } from '../interfaces';
+import { ServiceType } from '@homebridge/hap-client';
 
 export class WindowCovering {
-  sync(service: HapService) {
+  sync(service: ServiceType) {
     return {
       id: service.uniqueId,
       type: 'action.devices.types.BLINDS',
@@ -36,15 +37,15 @@ export class WindowCovering {
     };
   }
 
-  query(service: HapService) {
+  query(service: ServiceType) {
     return {
       on: true,
       online: true,
-      openPercent: service.characteristics.find(x => x.type === Characteristic.CurrentPosition).value,
+      openPercent: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentPosition).value,
     };
   }
 
-  execute(service: HapService, command): AccessoryTypeExecuteResponse {
+  execute(service: ServiceType, command): AccessoryTypeExecuteResponse {
     if (!command.execution.length) {
       return { payload: { characteristics: [] } };
     }
@@ -54,7 +55,7 @@ export class WindowCovering {
         const payload = {
           characteristics: [{
             aid: service.aid,
-            iid: service.characteristics.find(x => x.type === Characteristic.TargetPosition).iid,
+            iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.TargetPosition).iid,
             value: command.execution[0].params.openPercent,
           }],
         };

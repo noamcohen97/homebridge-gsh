@@ -8,7 +8,7 @@ import {
 } from '@angular/platform-browser-dynamic/testing';
 
 // mock window.homebridge
-import { MockHomebridgePluginUi } from '@homebridge/plugin-ui-utils';
+import { MockHomebridgePluginUi } from '@homebridge/plugin-ui-utils/dist/ui.mock';
 window.homebridge = new MockHomebridgePluginUi();
 
 declare const require: {

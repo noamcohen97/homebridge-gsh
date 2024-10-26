@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { MockHomebridgePluginUi } from '@homebridge/plugin-ui-utils';
+import { MockHomebridgePluginUi } from '@homebridge/plugin-ui-utils/dist/ui.mock';
 import * as flushPromises from 'flush-promises';
 
 import { AppComponent } from './app.component';

@@ -1,5 +1,6 @@
 import { HapClient, ServiceType } from '@homebridge/hap-client';
 import { ServicesTypes, Service, Characteristic } from './hap-types';
+import { SmartHomeV1ExecuteResponseCommands, SmartHomeV1ExecuteRequestPayload } from 'actions-on-google';
 import * as crypto from 'crypto';
 import { Subject } from 'rxjs';
 import { debounceTime, map } from 'rxjs/operators';
@@ -195,6 +196,7 @@ export class Hap {
    * @param devices
    */
   async query(devices) {
+    console.log('query', devices);
     const response = {};
 
     for (const device of devices) {
@@ -214,8 +216,8 @@ export class Hap {
    * Process the EXECUTE intent
    * @param commands
    */
-  async execute(commands) {
-    const response = [];
+  async execute(commands: any): Promise<SmartHomeV1ExecuteResponseCommands[]> {
+    const response: SmartHomeV1ExecuteResponseCommands[] = [];
 
     for (const command of commands) {
       for (const device of command.devices) {
@@ -268,14 +270,18 @@ export class Hap {
    * Request a status update from an accessory
    * @param service
    */
-  async getStatus(service) {
+  async getStatus(service: ServiceType) {
+    //  console.log('getStatus - service', service);
+    const response = await service.refreshCharacteristics();
+    //  console.log('getStatus - response', response);
+    return response;
+    //TODO: migrate
+    /*
     const iids: number[] = service.serviceCharacteristics.map(c => c.iid);
-
     const body = '?id=' + iids.map(iid => `${service.aid}.${iid}`).join(',');
     this.log.debug(`Requesting status for ${service.serviceName} ${service.instance.username}`);
     this.log.error('getStatus not implemented');
-    //TODO: migrate
-    /*
+
     const characteristics = await new Promise((resolve, reject) => {
       this.hapClient.HAPstatus(service.instance.ipAddress, service.instance.port, body, (err, status) => {
         if (err) {
@@ -573,5 +579,13 @@ export class Hap {
     this.log.debug('Sending State Report');
     this.log.debug(JSON.stringify(payload, null, 2));
     this.socket.sendJson(payload);
+  }
+
+
+  /**
+   * Close the HAP connection, used for testing
+   */
+  public async destroy() {
+    this.hapClient.resetInstancePool();
   }
 }

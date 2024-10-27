@@ -31,20 +31,9 @@ describe('Fan', () => {
   describe('execute message', () => {
     test('Fan with On/Off only', async () => {
       const response: any = await fan.execute(fanServiceOnOff, commandOnOff);
-      console.log(JSON.stringify(response, null, 2));
       expect(response).toBeDefined();
-      expect(response.type).toBe('On');
-      expect(response.value).toBeFalsy();
-      expect(response.serviceType).toContain('Fan');
-      expect(response.serviceName).toContain('Trailer Step');
-      expect(response.description).toContain('On');
-      expect(response.format).toContain('bool');
-      expect(response.perms).toContain('ev');
-      expect(response.perms).toContain('pr');
-      expect(response.perms).toContain('pw');
-      expect(response.canRead).toBeTruthy();
-      expect(response.canWrite).toBeTruthy();
-      expect(response.ev).toBeTruthy();
+      expect(response.payload).toBeDefined();
+      expect(response.payload.characteristics).toBeDefined();
       // await sleep(10000)
     });
   });

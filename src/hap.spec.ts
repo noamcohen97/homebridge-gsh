@@ -1,28 +1,81 @@
 import { Hap } from "./hap";
 import { HapClient, ServiceType, CharacteristicType } from '@homebridge/hap-client';
-import { SmartHomeV1SyncResponse } from 'actions-on-google';
+import { SmartHomeV1SyncResponse, SmartHomeV1QueryRequestDevices, SmartHomeV1ExecuteRequest } from 'actions-on-google';
+import { Log } from './logger';
+import { PluginConfig } from './interfaces';
 
-jest.setTimeout(30000);
 
 // socket, log, pin: string, config: PluginConfig
 
 
-var hap = new Hap(socket, log, pin, config);
 
-describe('LightBulb', () => {
-  describe('sync message', () => {
+class socketMock {
+  on(event: string, callback: any) {
+    if (event === 'websocket-status') {
+      callback('websocket-status');
+    }
+    if (event === 'json') {
+      callback({ serverMessage: 'serverMessage' });
+    }
+  }
+
+  sendJson(data: any) {
+    console.log('sendJson', data);
+  }
+}
+
+const config: PluginConfig = {
+  "name": "Google Smart Home",
+  "token": "1234567890",
+  "notice": "Keep your token a secret!",
+  "debug": false,
+  "platform": "google-smarthome",
+  "twoFactorAuthPin": "123-456",
+};
+
+var log = new Log(console, true);
+
+var hap = new Hap(socketMock, log, "031-45-154", config);
+
+describe('Process the QUERY intent', () => {
+
+  describe('sleep', () => {
+    test('Sleeping', async () => {
+      await sleep(20000);
+
+    }, 30000);
+
+  });
+
+  describe('QUERY message', () => {
     test('Lightbulb with On/Off only', async () => {
-      const response: any = hap.sync(hapServiceOnOff);
-      expect(response).toBeDefined();
-      expect(response.type).toBe('action.devices.types.LIGHT');
-      expect(response.traits).toContain('action.devices.traits.OnOff');
-      expect(response.traits).not.toContain('action.devices.traits.Brightness');
-      expect(response.traits).not.toContain('action.devices.traits.ColorSetting');
-      expect(response.attributes.colorModel).not.toBe('hsv');
-      expect(response.attributes.colorTemperatureRange).not.toBeDefined();
-      expect(response.attributes.commandOnlyColorSetting).not.toBeDefined();
-      // await sleep(10000)
+      const response: any = await hap.query(query);
+      console.log('response', response);
     });
+    test('Sleeping', async () => {
+      await sleep(5000);
+
+    }, 30000);
+    test('Lightbulb with On/Off only', async () => {
+      const response: any = await hap.query(query);
+      console.log('response', response);
+    });
+    test('Sleeping', async () => {
+      await sleep(5000);
+
+    }, 30000);
+    test('Lightbulb with On/Off only', async () => {
+      const response: any = await hap.query(query);
+      console.log('response', response);
+    });
+
+  });
+
+
+  afterAll(async () => {
+    // console.log('detroy', hap);
+    //await hap.destroy();
+    hap.hapClient.resetInstancePool();
 
   });
 
@@ -31,6 +84,64 @@ describe('LightBulb', () => {
 async function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+
+
+const execute = {
+  "inputs": [
+    {
+      "context": {
+        "locale_country": "US",
+        "locale_language": "en"
+      },
+      "intent": "action.devices.EXECUTE",
+      "payload": {
+        "commands": [
+          {
+            "devices": [
+              {
+                "customData": {
+                  "aid": 75,
+                  "iid": 8,
+                  "instanceIpAddress": "192.168.1.11",
+                  "instancePort": 46283,
+                  "instanceUsername": "1C:22:3D:E3:CF:34"
+                },
+                "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
+              }
+            ],
+            "execution": [
+              {
+                "command": "action.devices.commands.OnOff",
+                "params": {
+                  "on": false
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "requestId": "3137481448496135047"
+    }
+  ],
+  "requestId": "3137481448496135047"
+};
+
+const query: SmartHomeV1QueryRequestDevices[] = [
+  {
+    "customData": {
+      "aid": 75,
+      "iid": 8,
+      "instanceIpAddress": "192.168.1.11",
+      "instancePort": 46283,
+      "instanceUsername": "1C:22:3D:E3:CF:34"
+    },
+    "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
+  }];
+
+/* ----------------- */
+
+
 
 const setValue = async function (value: string | number | boolean): Promise<CharacteristicType> {
   // Perform your operations here

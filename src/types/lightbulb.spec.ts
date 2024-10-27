@@ -80,7 +80,6 @@ describe('LightBulb', () => {
   describe('execute message', () => {
     test('Lightbulb with On/Off only', async () => {
       const response: CharacteristicType = await lightbulb.execute(lightbulbServiceOnOff, commandOnOff);
-      console.log(JSON.stringify(response, null, 2));
       expect(response).toBeDefined();
       expect(response.type).toBe('On');
       expect(response.value).toBeFalsy();
@@ -157,7 +156,6 @@ async function sleep(ms: number) {
 
 const setValue = async function (value: string | number | boolean): Promise<CharacteristicType> {
   // Perform your operations here
-  console.log('setValue', value);
   const result: CharacteristicType = {
     "aid": 1,
     "iid": 1,

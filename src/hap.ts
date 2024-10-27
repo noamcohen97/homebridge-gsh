@@ -523,13 +523,13 @@ export class Hap {
    */
   async handleHapEvent(events) {
     for (const event of events) {
-      const accessories = this.services.filter(s =>
-        s.instance.ipAddress === event.host && s.instance.port === event.port && s.aid === event.aid);
-      const service = accessories.find(x => x.serviceCharacteristics.find(c => c.iid === event.iid));
-      if (service) {
-        const characteristic = service.serviceCharacteristics.find(c => c.iid === event.iid);
-        characteristic.value = event.value;
-        this.reportStateSubject.next(service.uniqueId);
+      const index = this.services.findIndex(item => item.uniqueId === event.uniqueId);
+      if (index === -1) {
+        this.log.debug(`[handleHapEvent] Service not found in services list ${event}`);
+        return
+      } else {
+        this.services[index] = event;
+        this.reportStateSubject.next(event.uniqueId);
       }
     }
   }

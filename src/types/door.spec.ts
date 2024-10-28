@@ -1,26 +1,31 @@
-import { Fan } from "./fan";
+import { Door } from "./door";
 import { HapClient, ServiceType, CharacteristicType } from '@homebridge/hap-client';
 import { SmartHomeV1SyncResponse, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
 import { AccessoryTypeExecuteResponse } from '../interfaces';
 
-var fan = new Fan();
+var door = new Door();
 
-describe('Fan', () => {
+describe('Door', () => {
   describe('sync message', () => {
-    test('Fan with On/Off only', async () => {
-      const response: any = fan.sync(fanServiceOnOff);
+    test('Door with On/Off only', async () => {
+      const response: any = door.sync(doorServiceOnOff);
+      console.log(response);
       expect(response).toBeDefined();
-      expect(response.type).toBe('action.devices.types.FAN');
-      expect(response.traits).toContain('action.devices.traits.OnOff');
+      expect(response.type).toBe('action.devices.types.DOOR');
+      expect(response.traits).toContain('action.devices.traits.OpenClose');
       expect(response.traits).not.toContain('action.devices.traits.Brightness');
       expect(response.traits).not.toContain('action.devices.traits.ColorSetting');
-      expect(response.attributes).not.toBeDefined();
+      expect(response.attributes).toBeDefined();
+      expect(response.attributes.openDirection).toBeDefined();
+      expect(response.attributes.openDirection).toContain('IN');
+      expect(response.attributes.openDirection).toContain('OUT');
+      expect(response.name).toBeDefined();
       // await sleep(10000)
     });
   });
   describe('query message', () => {
-    test('Fan with On/Off only', async () => {
-      const response = fan.query(fanServiceOnOff);
+    test('Door with On/Off only', async () => {
+      const response = door.query(doorServiceOnOff);
       expect(response).toBeDefined();
       expect(response.on).toBeDefined();
       expect(response.online).toBeDefined();
@@ -29,8 +34,8 @@ describe('Fan', () => {
   });
 
   describe('execute message', () => {
-    test('Fan with On/Off only', async () => {
-      const response = await fan.execute(fanServiceOnOff, commandOnOff);
+    test('Door with On/Off only', async () => {
+      const response = await door.execute(doorServiceOnOff, commandOpenClose);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('SUCCESS');
@@ -38,24 +43,24 @@ describe('Fan', () => {
     });
 
 
-    test('Fan with On/Off only - commandMalformed', async () => {
-      const response = await fan.execute(fanServiceOnOff, commandMalformed);
+    test('Door with On/Off only - commandMalformed', async () => {
+      const response = await door.execute(doorServiceOnOff, commandMalformed);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('ERROR');
     });
 
-    test('Fan with On/Off only - commandIncorrectCommand', async () => {
-      const response = await fan.execute(fanServiceOnOff, commandIncorrectCommand);
+    test('Door with On/Off only - commandIncorrectCommand', async () => {
+      const response = await door.execute(doorServiceOnOff, commandIncorrectCommand);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('ERROR');
     });
 
-    test('Fan with On/Off only - Error', async () => {
+    test('Door with On/Off only - Error', async () => {
       expect.assertions(1);
-      fanServiceOnOff.serviceCharacteristics[0].setValue = setValueError;
-      expect(fan.execute(fanServiceOnOff, commandOnOff)).rejects.toThrow('Error setting value');
+      doorServiceOnOff.serviceCharacteristics[1].setValue = setValueError;
+      expect(door.execute(doorServiceOnOff, commandOpenClose)).rejects.toThrow('Error setting value');
       // await sleep(10000)
     });
   });
@@ -72,7 +77,7 @@ const setValue = async function (value: string | number | boolean): Promise<Char
     "iid": 1,
     "uuid": "00000025-0000-1000-8000-0026BB765291",
     "type": "On",
-    "serviceType": "Fan",
+    "serviceType": "Door",
     "serviceName": "Trailer Step",
     "description": "On",
     "value": 0,
@@ -121,7 +126,7 @@ const getValue = async function (): Promise<CharacteristicType> {
     "iid": 1,
     "uuid": "00000025-0000-1000-8000-0026BB765291",
     "type": "On",
-    "serviceType": "Fan",
+    "serviceType": "Door",
     "serviceName": "Trailer Step",
     "description": "On",
     "value": 0,
@@ -139,7 +144,7 @@ const getValue = async function (): Promise<CharacteristicType> {
 };
 
 const refreshCharacteristics = async function (): Promise<ServiceType> {
-  return fanServiceHue;
+  return doorServiceOnOff;
 };
 
 const setCharacteristic = async function (value: string | number | boolean): Promise<ServiceType> {
@@ -149,7 +154,7 @@ const setCharacteristic = async function (value: string | number | boolean): Pro
     "iid": 1,
     "uuid": "00000025-0000-1000-8000-0026BB765291",
     "type": "On",
-    "serviceType": "Fan",
+    "serviceType": "Door",
     "serviceName": "Trailer Step",
     "description": "On",
     "value": 0,
@@ -163,7 +168,7 @@ const setCharacteristic = async function (value: string | number | boolean): Pro
     "canWrite": true,
     "ev": true
   };
-  return fanServiceHue;
+  return doorServiceOnOff;
 };
 
 const getCharacteristic = function (): CharacteristicType {
@@ -173,7 +178,7 @@ const getCharacteristic = function (): CharacteristicType {
     "iid": 1,
     "uuid": "00000025-0000-1000-8000-0026BB765291",
     "type": "On",
-    "serviceType": "Fan",
+    "serviceType": "Door",
     "serviceName": "Trailer Step",
     "description": "On",
     "value": 0,
@@ -190,21 +195,21 @@ const getCharacteristic = function (): CharacteristicType {
   return result;
 };
 
-const fanServiceHue: ServiceType = {
-  aid: 58,
+const doorServiceOnOff: ServiceType = {
+  aid: 13,
   iid: 8,
   uuid: '00000043-0000-1000-8000-0026BB765291',
-  type: 'Fan',
-  humanType: 'Fan',
-  serviceName: 'Powder Shower',
+  type: 'Door',
+  humanType: 'Door',
+  serviceName: 'Shed Light',
   serviceCharacteristics: [
     {
-      aid: 58,
+      aid: 13,
       iid: 10,
-      uuid: '00000025-0000-1000-8000-0026BB765291',
-      type: 'On',
-      serviceType: 'Fan',
-      serviceName: 'Powder Shower',
+      uuid: '000000B0-0000-1000-8000-0026BB765291',
+      type: 'Active',
+      serviceType: 'Door',
+      serviceName: 'Shed Light',
       description: 'On',
       value: 0,
       format: 'bool',
@@ -220,15 +225,15 @@ const fanServiceHue: ServiceType = {
       getValue: getValue
     },
     {
-      aid: 58,
-      iid: 11,
-      uuid: '000000E3-0000-1000-8000-0026BB765291',
-      type: 'ConfiguredName',
-      serviceType: 'Fan',
-      serviceName: 'Powder Shower',
-      description: 'Configured Name',
-      value: 'Powder Shower',
-      format: 'string',
+      aid: 13,
+      iid: 10,
+      uuid: '0000007C-0000-1000-8000-0026BB765291',
+      type: 'TargetPosition',
+      serviceType: 'Door',
+      serviceName: 'Shed Light',
+      description: 'On',
+      value: 0,
+      format: 'bool',
       perms: ["ev", "pr", "pw"],
       unit: undefined,
       maxValue: undefined,
@@ -241,132 +246,11 @@ const fanServiceHue: ServiceType = {
       getValue: getValue
     },
     {
-      aid: 58,
-      iid: 12,
-      uuid: '00000008-0000-1000-8000-0026BB765291',
-      type: 'Brightness',
-      serviceType: 'Fan',
-      serviceName: 'Powder Shower',
-      description: 'Brightness',
-      value: 65,
-      format: 'int',
-      perms: ["ev", "pr", "pw"],
-      unit: 'percentage',
-      maxValue: 100,
-      minValue: 0,
-      minStep: 1,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    },
-    {
-      aid: 58,
-      iid: 13,
-      uuid: '00000013-0000-1000-8000-0026BB765291',
-      type: 'Hue',
-      serviceType: 'Fan',
-      serviceName: 'Powder Shower',
-      description: 'Hue',
-      value: 0,
-      format: 'float',
-      perms: ["ev", "pr", "pw"],
-      unit: 'arcdegrees',
-      maxValue: 360,
-      minValue: 0,
-      minStep: 1,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    },
-    {
-      aid: 58,
-      iid: 14,
-      uuid: '0000002F-0000-1000-8000-0026BB765291',
-      type: 'Saturation',
-      serviceType: 'Fan',
-      serviceName: 'Powder Shower',
-      description: 'Saturation',
-      value: 0,
-      format: 'float',
-      perms: ["ev", "pr", "pw"],
-      unit: 'percentage',
-      maxValue: 100,
-      minValue: 0,
-      minStep: 1,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    },
-    {
-      aid: 58,
-      iid: 15,
-      uuid: '000000CE-0000-1000-8000-0026BB765291',
-      type: 'ColorTemperature',
-      serviceType: 'Fan',
-      serviceName: 'Powder Shower',
-      description: 'Color Temperature',
-      value: 325,
-      format: 'int',
-      perms: ["ev", "pr", "pw"],
-      unit: undefined,
-      maxValue: 500,
-      minValue: 140,
-      minStep: 1,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }
-  ],
-  accessoryInformation: {
-    Manufacturer: 'Tasmota',
-    Model: 'Tuya MCU',
-    Name: 'Powder Shower',
-    'Serial Number': 'ED8243-jessie',
-    'Firmware Revision': '9.5.0tasmota'
-  },
-  values: {
-    On: 0,
-    ConfiguredName: 'Powder Shower',
-    Brightness: 65,
-    Hue: 0,
-    Saturation: 0,
-    ColorTemperature: 325
-  },
-  linked: undefined,
-  instance: {
-    name: 'homebridge',
-    username: '1C:22:3D:E3:CF:34',
-    ipAddress: '192.168.1.11',
-    port: 46283
-  },
-  uniqueId: '2a1f1a87419c2afbd847828b96095f892975c36572751ab71f53edf0c5372fdb',
-  refreshCharacteristics: refreshCharacteristics,
-  setCharacteristic: setCharacteristic,
-  getCharacteristic: getCharacteristic
-};
-
-const fanServiceOnOff: ServiceType = {
-  aid: 13,
-  iid: 8,
-  uuid: '00000043-0000-1000-8000-0026BB765291',
-  type: 'Fan',
-  humanType: 'Fan',
-  serviceName: 'Shed Light',
-  serviceCharacteristics: [
-    {
       aid: 13,
       iid: 10,
-      uuid: '00000025-0000-1000-8000-0026BB765291',
-      type: 'On',
-      serviceType: 'Fan',
+      uuid: '0000006D-0000-1000-8000-0026BB765291',
+      type: 'CurrentPosition',
+      serviceType: 'Door',
       serviceName: 'Shed Light',
       description: 'On',
       value: 0,
@@ -387,7 +271,7 @@ const fanServiceOnOff: ServiceType = {
       iid: 11,
       uuid: '000000E3-0000-1000-8000-0026BB765291',
       type: 'ConfiguredName',
-      serviceType: 'Fan',
+      serviceType: 'Door',
       serviceName: 'Shed Light',
       description: 'Configured Name',
       value: 'Shed Light',
@@ -425,12 +309,12 @@ const fanServiceOnOff: ServiceType = {
   getCharacteristic: getCharacteristic
 };
 
-const fanServiceDimmer: ServiceType = {
+const doorServiceDimmer: ServiceType = {
   aid: 14,
   iid: 8,
   uuid: '00000043-0000-1000-8000-0026BB765291',
-  type: 'Fan',
-  humanType: 'Fan',
+  type: 'Door',
+  humanType: 'Door',
   serviceName: 'Front Hall',
   serviceCharacteristics: [
     {
@@ -438,7 +322,7 @@ const fanServiceDimmer: ServiceType = {
       iid: 10,
       uuid: '00000025-0000-1000-8000-0026BB765291',
       type: 'On',
-      serviceType: 'Fan',
+      serviceType: 'Door',
       serviceName: 'Front Hall',
       description: 'On',
       value: 0,
@@ -459,7 +343,7 @@ const fanServiceDimmer: ServiceType = {
       iid: 11,
       uuid: '00000008-0000-1000-8000-0026BB765291',
       type: 'Brightness',
-      serviceType: 'Fan',
+      serviceType: 'Door',
       serviceName: 'Front Hall',
       description: 'Brightness',
       value: 100,
@@ -480,7 +364,7 @@ const fanServiceDimmer: ServiceType = {
       iid: 12,
       uuid: '000000E3-0000-1000-8000-0026BB765291',
       type: 'ConfiguredName',
-      serviceType: 'Fan',
+      serviceType: 'Door',
       serviceName: 'Front Hall',
       description: 'Configured Name',
       value: 'Front Hall',
@@ -536,6 +420,29 @@ const commandOnOff = {
       "command": "action.devices.commands.OnOff",
       "params": {
         "on": true
+      }
+    }
+  ]
+};
+
+const commandOpenClose = {
+  "devices": [
+    {
+      "customData": {
+        "aid": 75,
+        "iid": 8,
+        "instanceIpAddress": "192.168.1.11",
+        "instancePort": 46283,
+        "instanceUsername": "1C:22:3D:E3:CF:34"
+      },
+      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
+    }
+  ],
+  "execution": [
+    {
+      "command": "action.devices.commands.OpenClose",
+      "params": {
+        "openPercent": 50
       }
     }
   ]

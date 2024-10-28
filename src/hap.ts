@@ -1,6 +1,6 @@
 import { HapClient, ServiceType } from '@homebridge/hap-client';
 import { ServicesTypes, Service, Characteristic } from './hap-types';
-import { SmartHomeV1ExecuteResponseCommands, SmartHomeV1ExecuteRequestPayload } from 'actions-on-google';
+import { SmartHomeV1ExecuteResponseCommands, SmartHomeV1ExecuteRequestPayload, SmartHomeV1ExecuteRequestCommands } from 'actions-on-google';
 import * as crypto from 'crypto';
 import { Subject } from 'rxjs';
 import { debounceTime, map } from 'rxjs/operators';
@@ -57,8 +57,8 @@ export class Hap {
   };
 
   /* event tracking */
-  evInstances: Instance[] = [];
-  evServices: ServiceType[] = [];
+  // evInstances: Instance[] = [];
+  // evServices: ServiceType[] = [];
   reportStateSubject = new Subject();
   pendingStateReport = [];
 
@@ -88,7 +88,7 @@ export class Hap {
   instanceBlacklist: Array<string> = [];
   accessoryFilter: Array<string> = [];
   accessorySerialFilter: Array<string> = [];
-  deviceNameMap: Array<{ replace: string; with: string }> = [];
+  // deviceNameMap: Array<{ replace: string; with: string }> = [];
 
   constructor(socket, log, pin: string, config: PluginConfig) {
     this.config = config;
@@ -163,7 +163,7 @@ export class Hap {
     this.log.info(`Discovered ${this.services.length} accessories`);
     this.ready = true;
     await this.buildSyncResponse();
-    await this.registerCharacteristicEventHandlers();
+    // await this.registerCharacteristicEventHandlers();
   }
 
   /**
@@ -196,7 +196,7 @@ export class Hap {
    * @param devices
    */
   async query(devices) {
-    console.log('query', devices);
+    // console.log('query', devices);
     const response = {};
 
     for (const device of devices) {
@@ -216,7 +216,7 @@ export class Hap {
    * Process the EXECUTE intent
    * @param commands
    */
-  async execute(commands: any): Promise<SmartHomeV1ExecuteResponseCommands[]> {
+  async execute(commands: SmartHomeV1ExecuteRequestCommands[]): Promise<SmartHomeV1ExecuteResponseCommands[]> {
     const response: SmartHomeV1ExecuteResponseCommands[] = [];
 
     for (const command of commands) {
@@ -244,17 +244,15 @@ export class Hap {
             });
           } else {
             // process the request
-            if (await this.types[service.type].execute(service, command)) {
-              response.push({
-                ids: [device.id],
-                status: 'SUCCESS',
-                //TODO:            states,
-              });
-              this.log.error('execute STATES not implemented');
-            } else {
+            try {
+              response.push(await this.types[service.type].execute(service, command));
+
+            } catch (error) {
+              this.log.error(`Error executing command: ${error.message}`);
               response.push({
                 ids: [device.id],
                 status: 'ERROR',
+                debugString: error.message,
               });
             }
 
@@ -271,91 +269,17 @@ export class Hap {
    * @param service
    */
   async getStatus(service: ServiceType) {
-    //  console.log('getStatus - service', service);
-    const response = await service.refreshCharacteristics();
-    //  console.log('getStatus - response', response);
-    return response;
-    //TODO: migrate
-    /*
-    const iids: number[] = service.serviceCharacteristics.map(c => c.iid);
-    const body = '?id=' + iids.map(iid => `${service.aid}.${iid}`).join(',');
-    this.log.debug(`Requesting status for ${service.serviceName} ${service.instance.username}`);
-    this.log.error('getStatus not implemented');
-
-    const characteristics = await new Promise((resolve, reject) => {
-      this.hapClient.HAPstatus(service.instance.ipAddress, service.instance.port, body, (err, status) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(status.characteristics);
-      }, service.instance);
-    }) as Array<HapCharacteristic>;
-
-    for (const c of characteristics) {
-      const characteristic = service.serviceCharacteristics.find(x => x.iid === c.iid);
-      characteristic.value = c.value;
-    }
-    */
+    return await service.refreshCharacteristics();
   }
 
-  /**
-   * Check that it's possible to connect to the instance
-   */
-  private async checkInstanceConnection(instance: HapInstance): Promise<boolean> {
-    return new Promise((resolve) => {
-      this.log.debug(`Checking connection to ${instance}`);
-      this.log.error('checkInstanceConnection not implemented');
-      /*
-      console.log(JSON.stringify(instance));
-      this.hapClient.HAPcontrol(instance.ipAddress, instance.instance.port, JSON.stringify(
-        { characteristics: [{ aid: -1, iid: -1 }] },
-      ), (err) => {
-        if (err) {
-          return resolve(false);
-        }
-        return resolve(true);
-      }, instance.instance);
-      */
-    });
-  }
-
-  /**
-   * Load accessories from Homebridge
-   */
-
-  /*
-  async getAccessories() {
-    return new Promise((resolve, reject) => {
-      this.hapClient.HAPaccessories(async (instances: HapInstance[]) => {
-        this.services = [];
-
-        for (const instance of instances) {
-          if (!await this.checkInstanceConnection(instance)) {
-            this.instanceBlacklist.push(instance.instance.txt.id);
-          }
-
-          if (!this.instanceBlacklist.find(x => x.toLowerCase() === instance.instance.txt.id.toLowerCase())) {
-            await this.parseAccessories(instance);
-          } else {
-            this.log.debug(`Instance [${instance.instance.txt.id}] on instance blacklist, ignoring.`);
-          }
-        }
-
-        return resolve(true);
-      });
-    });
-  }
-  */
   /**
    * Load all the accessories from Homebridge
    */
   public async loadAccessories(): Promise<ServiceType[]> {
-    //  if (!this.configService.homebridgeInsecureMode) {
-    //    throw new BadRequestException('Homebridge must be running in insecure mode to access accessories.')
-    //  }
-
     return this.hapClient.getAllServices().then((services) => {
       services = services.filter(x => this.types[x.type] !== undefined);
+      services = services.filter(x => !this.accessoryFilter.includes(x.serviceName));
+      services = services.filter(x => !this.accessorySerialFilter.includes(x.accessoryInformation['Serial Number']));
       return services
     }).catch((e) => {
       if (e.response?.status === 401) {
@@ -365,156 +289,6 @@ export class Hap {
       }
       return []
     })
-  }
-
-  /**
-   * Parse accessories from homebridge and filter out the ones we support
-   * @param instance
-   */
-  /*
-  async parseAccessories(instance: HapInstance) {
-    instance.accessories.accessories.forEach((accessory) => {
-      // Ensure UUIDs are long form 
-      for (const service of accessory.services) {
-        service.type = toLongFormUUID(service.type);
-        for (const characteristic of service.serviceCharacteristics) {
-          characteristic.type = toLongFormUUID(characteristic.type);
-        }
-      }
-
-      // get accessory information service
-      const accessoryInformationService = accessory.services.find(x => x.type === Service.AccessoryInformation);
-      const accessoryInformation = {};
-
-      if (accessoryInformationService && accessoryInformationservice.serviceCharacteristics) {
-        accessoryInformationservice.serviceCharacteristics.forEach((c) => {
-          if (c.value) {
-            accessoryInformation[c.description] = c.value;
-          }
-        });
-      }
-
-      // discover the service type
-      accessory.services
-        .filter(x => x.type !== Service.AccessoryInformation)
-        .filter(x => ServicesTypes[x.type])
-        .filter(x => Object.prototype.hasOwnProperty.call(this.types, ServicesTypes[x.type]))
-        .forEach((service) => {
-          service.accessoryInformation = accessoryInformation;
-          service.aid = accessory.aid;
-          service.type = ServicesTypes[service.type];
-
-          service.instance = {
-            ipAddress: instance.ipAddress,
-            port: instance.instance.port,
-            username: instance.instance.txt.id,
-          };
-
-          // generate unique id for service
-          service.uniqueId = crypto.createHash('sha256')
-            .update(`${service.instance.username}${service.aid}${service.iid}${service.type}`)
-            .digest('hex');
-
-          // discover name of service
-          const serviceNameCharacteristic = service.serviceCharacteristics.find(x => [
-            Characteristic.Name,
-            Characteristic.ConfiguredName,
-          ].includes(x.type));
-
-          service.serviceName = (serviceNameCharacteristic && serviceNameCharacteristic.value.length) ?
-            serviceNameCharacteristic.value : service.accessoryInformation.Name || service.type;
-
-          // perform user-defined name replacements
-          const nameMap = this.deviceNameMap.find(x => x.replace === service.serviceName);
-          if (nameMap) {
-            service.serviceName = nameMap.with;
-          }
-
-          // perform user-defined service filters based on name
-          if (this.accessoryFilter.includes(service.serviceName)) {
-            this.log.debug(`Skipping ${service.serviceName} ${service.accessoryInformation['Serial Number']} - matches accessoryFilter`);
-            return;
-          }
-
-          // perform user-defined service filters based on serial number
-          if (this.accessorySerialFilter.includes(service.accessoryInformation['Serial Number'])) {
-            this.log.debug(`Skipping ${service.serviceName} ${service.accessoryInformation['Serial Number']} - matches accessorySerialFilter'`);
-            return;
-          }
-
-          // if 2fa is forced for this service type, but a pin has not been set ignore the service
-          if (this.types[service.type].twoFactorRequired && !this.config.twoFactorAuthPin && !this.config.disablePinCodeRequirement) {
-            this.log.warn(`Not registering ${service.serviceName} - Pin cide has not been set and is required for secure ` +
-              `${service.type} accessory types. See https://git.io/JUQWX`);
-            return;
-          }
-
-          this.services.push(service);
-        });
-    });
-  }
-  */
-
-  /**
-   * Register hap characteristic event handlers
-   */
-  async registerCharacteristicEventHandlers() {
-    const monitor = await this.hapClient.monitorCharacteristics();
-    monitor.on('service-update', (events) => {
-      this.handleHapEvent(events);
-    });
-
-    this.log.error('Registered HAP Event listeners not implemented');
-
-
-
-    /*
-        for (const service of this.services) {
-          // get a list of characteristics we can watch
-          console.log('registerCharacteristicEventHandlers: service', service);
-          const evCharacteristics = service.serviceCharacteristics.filter(x => x.ev && this.evTypes.includes(x.type));
-    
-          if (evCharacteristics.length) {
-            // register the instance if it's not already there
-            if (!this.evInstances.find(x => x.username === service.instance.username)) {
-              const newInstance = Object.assign({}, service.instance);
-              newInstance.evCharacteristics = [];
-              this.evInstances.push(newInstance);
-            }
-    
-            const instance = this.evInstances.find(x => x.username === service.instance.username);
-    
-            for (const evCharacteristic of evCharacteristics) {
-              if (!instance.evCharacteristics.find(x => x.aid === service.aid && x.iid === evCharacteristic.iid)) {
-                instance.evCharacteristics.push({ aid: service.aid, iid: evCharacteristic.iid, ev: true });
-              }
-            }
-          }
-     
-  }
-     */
-    // start listeners
-    /*
-    for (const instance of this.evInstances) {
-      const unregistered = instance.evCharacteristics.filter(x => !x.registered);
-      if (unregistered.length) {
-        this.hapClient.HAPevent(instance.ipAddress, instance.port, JSON.stringify({
-          characteristics: instance.evCharacteristics.filter(x => !x.registered),
-        }), (err, response) => {
-          if (err) {
-            this.log.error(err.message);
-            this.instanceBlacklist.push(instance.username);
-            this.evInstances.splice(this.evInstances.indexOf(instance), 1);
-          } else {
-            instance.evCharacteristics.forEach((c) => {
-              c.registered = true;
-            });
-            this.log.debug('HAP Event listeners registered succesfully');
-          }
-        }, instance);
-      }
-    }
-    */
   }
 
   /**

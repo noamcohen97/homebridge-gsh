@@ -1,8 +1,9 @@
 import { Characteristic } from '../hap-types';
 import { HapClient, ServiceType, CharacteristicType } from '@homebridge/hap-client';
-import { AccessoryTypeExecuteResponse } from '../interfaces';
+import { AccessoryTypeExecuteResponse, HapDevice } from '../interfaces';
+import { SmartHomeV1ExecuteResponseCommands, SmartHomeV1ExecuteRequestCommands } from 'actions-on-google';
 
-export class Lightbulb {
+export class Lightbulb implements HapDevice {
   sync(service: ServiceType) {
 
     const attributes = {} as any;
@@ -94,32 +95,36 @@ export class Lightbulb {
     return response;
   }
 
-  async execute(service: ServiceType, command): Promise<CharacteristicType> {
+  async execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): Promise<SmartHomeV1ExecuteResponseCommands> {
     if (!command.execution.length) {
-      return;
+      return { ids: [service.uniqueId], status: 'ERROR', debugString: 'missing command' };
     }
     switch (command.execution[0].command) {
       case ('action.devices.commands.OnOff'): {
-        return await service.serviceCharacteristics.find(x => x.uuid === Characteristic.On).setValue(command.execution[0].params.on);
+        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.On).setValue(command.execution[0].params.on);
+        return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
       case ('action.devices.commands.BrightnessAbsolute'): {
-        return await service.serviceCharacteristics.find(x => x.uuid === Characteristic.On).setValue(command.execution[0].params.on) && await service.serviceCharacteristics.find(x => x.uuid === Characteristic.Brightness).setValue(command.execution[0].params.brightness);
+        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.On).setValue(command.execution[0].params.on);
+        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.Brightness).setValue(command.execution[0].params.brightness);
+        return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
       case ('action.devices.commands.ColorAbsolute'): {
-
         if (command.execution[0].params.color.spectrumHSV) {
-          return await service.serviceCharacteristics.find(x => x.uuid === Characteristic.Hue).setValue(command.execution[0].params.color.spectrumHSV.hue) && await service.serviceCharacteristics.find(x => x.uuid === Characteristic.Saturation).setValue(command.execution[0].params.color.spectrumHSV.saturation * 100);
+          await service.serviceCharacteristics.find(x => x.uuid === Characteristic.Hue).setValue(command.execution[0].params.color.spectrumHSV.hue);
+          await service.serviceCharacteristics.find(x => x.uuid === Characteristic.Saturation).setValue(command.execution[0].params.color.spectrumHSV.saturation * 100);
+          return { ids: [service.uniqueId], status: 'SUCCESS' };
         }
-
         if (command.execution[0].params.color.temperature) {
           const min = service.serviceCharacteristics.find(x => x.uuid === Characteristic.ColorTemperature).minValue;
           const max = service.serviceCharacteristics.find(x => x.uuid === Characteristic.ColorTemperature).maxValue;
           const value = command.execution[0].params.color.temperature;
           const hbAccessoryValue = min + (max - min) * ((value - 2000) / (6000 - 2000));
-          return await service.serviceCharacteristics.find(x => x.uuid === Characteristic.ColorTemperature).setValue((max - min) - (hbAccessoryValue - min) + min);
+          await service.serviceCharacteristics.find(x => x.uuid === Characteristic.ColorTemperature).setValue((max - min) - (hbAccessoryValue - min) + min);
+          return { ids: [service.uniqueId], status: 'SUCCESS' };
         }
       }
+      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: 'unknown command ' + command.execution[0].command }; }
     }
   }
-
 }

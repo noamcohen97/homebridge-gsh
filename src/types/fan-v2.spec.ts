@@ -1,9 +1,9 @@
-import { Fan } from "./fan";
+import { Fanv2 } from "./fan-v2";
 import { HapClient, ServiceType, CharacteristicType } from '@homebridge/hap-client';
 import { SmartHomeV1SyncResponse, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
 import { AccessoryTypeExecuteResponse } from '../interfaces';
 
-var fan = new Fan();
+var fan = new Fanv2();
 
 describe('Fan', () => {
   describe('sync message', () => {
@@ -139,7 +139,7 @@ const getValue = async function (): Promise<CharacteristicType> {
 };
 
 const refreshCharacteristics = async function (): Promise<ServiceType> {
-  return fanServiceHue;
+  return fanServiceOnOff;
 };
 
 const setCharacteristic = async function (value: string | number | boolean): Promise<ServiceType> {
@@ -163,7 +163,7 @@ const setCharacteristic = async function (value: string | number | boolean): Pro
     "canWrite": true,
     "ev": true
   };
-  return fanServiceHue;
+  return fanServiceOnOff;
 };
 
 const getCharacteristic = function (): CharacteristicType {
@@ -190,169 +190,6 @@ const getCharacteristic = function (): CharacteristicType {
   return result;
 };
 
-const fanServiceHue: ServiceType = {
-  aid: 58,
-  iid: 8,
-  uuid: '00000043-0000-1000-8000-0026BB765291',
-  type: 'Fan',
-  humanType: 'Fan',
-  serviceName: 'Powder Shower',
-  serviceCharacteristics: [
-    {
-      aid: 58,
-      iid: 10,
-      uuid: '00000025-0000-1000-8000-0026BB765291',
-      type: 'On',
-      serviceType: 'Fan',
-      serviceName: 'Powder Shower',
-      description: 'On',
-      value: 0,
-      format: 'bool',
-      perms: ["ev", "pr", "pw"],
-      unit: undefined,
-      maxValue: undefined,
-      minValue: undefined,
-      minStep: undefined,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    },
-    {
-      aid: 58,
-      iid: 11,
-      uuid: '000000E3-0000-1000-8000-0026BB765291',
-      type: 'ConfiguredName',
-      serviceType: 'Fan',
-      serviceName: 'Powder Shower',
-      description: 'Configured Name',
-      value: 'Powder Shower',
-      format: 'string',
-      perms: ["ev", "pr", "pw"],
-      unit: undefined,
-      maxValue: undefined,
-      minValue: undefined,
-      minStep: undefined,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    },
-    {
-      aid: 58,
-      iid: 12,
-      uuid: '00000008-0000-1000-8000-0026BB765291',
-      type: 'Brightness',
-      serviceType: 'Fan',
-      serviceName: 'Powder Shower',
-      description: 'Brightness',
-      value: 65,
-      format: 'int',
-      perms: ["ev", "pr", "pw"],
-      unit: 'percentage',
-      maxValue: 100,
-      minValue: 0,
-      minStep: 1,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    },
-    {
-      aid: 58,
-      iid: 13,
-      uuid: '00000013-0000-1000-8000-0026BB765291',
-      type: 'Hue',
-      serviceType: 'Fan',
-      serviceName: 'Powder Shower',
-      description: 'Hue',
-      value: 0,
-      format: 'float',
-      perms: ["ev", "pr", "pw"],
-      unit: 'arcdegrees',
-      maxValue: 360,
-      minValue: 0,
-      minStep: 1,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    },
-    {
-      aid: 58,
-      iid: 14,
-      uuid: '0000002F-0000-1000-8000-0026BB765291',
-      type: 'Saturation',
-      serviceType: 'Fan',
-      serviceName: 'Powder Shower',
-      description: 'Saturation',
-      value: 0,
-      format: 'float',
-      perms: ["ev", "pr", "pw"],
-      unit: 'percentage',
-      maxValue: 100,
-      minValue: 0,
-      minStep: 1,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    },
-    {
-      aid: 58,
-      iid: 15,
-      uuid: '000000CE-0000-1000-8000-0026BB765291',
-      type: 'ColorTemperature',
-      serviceType: 'Fan',
-      serviceName: 'Powder Shower',
-      description: 'Color Temperature',
-      value: 325,
-      format: 'int',
-      perms: ["ev", "pr", "pw"],
-      unit: undefined,
-      maxValue: 500,
-      minValue: 140,
-      minStep: 1,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }
-  ],
-  accessoryInformation: {
-    Manufacturer: 'Tasmota',
-    Model: 'Tuya MCU',
-    Name: 'Powder Shower',
-    'Serial Number': 'ED8243-jessie',
-    'Firmware Revision': '9.5.0tasmota'
-  },
-  values: {
-    On: 0,
-    ConfiguredName: 'Powder Shower',
-    Brightness: 65,
-    Hue: 0,
-    Saturation: 0,
-    ColorTemperature: 325
-  },
-  linked: undefined,
-  instance: {
-    name: 'homebridge',
-    username: '1C:22:3D:E3:CF:34',
-    ipAddress: '192.168.1.11',
-    port: 46283
-  },
-  uniqueId: '2a1f1a87419c2afbd847828b96095f892975c36572751ab71f53edf0c5372fdb',
-  refreshCharacteristics: refreshCharacteristics,
-  setCharacteristic: setCharacteristic,
-  getCharacteristic: getCharacteristic
-};
-
 const fanServiceOnOff: ServiceType = {
   aid: 13,
   iid: 8,
@@ -364,8 +201,8 @@ const fanServiceOnOff: ServiceType = {
     {
       aid: 13,
       iid: 10,
-      uuid: '00000025-0000-1000-8000-0026BB765291',
-      type: 'On',
+      uuid: '000000B0-0000-1000-8000-0026BB765291',
+      type: 'Active',
       serviceType: 'Fan',
       serviceName: 'Shed Light',
       description: 'On',

@@ -1,6 +1,6 @@
 import { Lightbulb } from "./lightbulb";
 import { HapClient, ServiceType, CharacteristicType } from '@homebridge/hap-client';
-import { SmartHomeV1SyncResponse } from 'actions-on-google';
+import { SmartHomeV1SyncResponse, SmartHomeV1ExecuteResponseCommands, SmartHomeV1ExecuteRequestCommands } from 'actions-on-google';
 
 jest.setTimeout(30000);
 
@@ -79,73 +79,50 @@ describe('LightBulb', () => {
 
   describe('execute message', () => {
     test('Lightbulb with On/Off only', async () => {
-      const response: CharacteristicType = await lightbulb.execute(lightbulbServiceOnOff, commandOnOff);
+      const response = await lightbulb.execute(lightbulbServiceOnOff, commandOnOff);
       expect(response).toBeDefined();
-      expect(response.type).toBe('On');
-      expect(response.value).toBeFalsy();
-      expect(response.serviceType).toContain('Lightbulb');
-      expect(response.serviceName).toContain('Trailer Step');
-      expect(response.description).toContain('On');
-      expect(response.format).toContain('bool');
-      expect(response.perms).toContain('ev');
-      expect(response.perms).toContain('pr');
-      expect(response.perms).toContain('pw');
-      expect(response.canRead).toBeTruthy();
-      expect(response.canWrite).toBeTruthy();
-      expect(response.ev).toBeTruthy();
+      expect(response.ids).toBeDefined();
+      expect(response.status).toBe('SUCCESS');
+      // await sleep(10000)
+    });
+    test('Lightbulb with On/Off only - Error', async () => {
+      expect.assertions(1);
+      expect(lightbulb.execute(lightbulbServiceOnOffError, commandOnOff)).rejects.toThrow('Error setting value');
       // await sleep(10000)
     });
     test('Lightbulb with On/Off and dimming', async () => {
-      const response: any = await lightbulb.execute(lightbulbServiceDimmer, commandBrightness);
+      const response = await lightbulb.execute(lightbulbServiceDimmer, commandBrightness);
       expect(response).toBeDefined();
-      expect(response.type).toBe('On');
-      expect(response.value).toBeFalsy();
-      expect(response.serviceType).toContain('Lightbulb');
-      expect(response.serviceName).toContain('Trailer Step');
-      expect(response.description).toContain('On');
-      expect(response.format).toContain('bool');
-      expect(response.perms).toContain('ev');
-      expect(response.perms).toContain('pr');
-      expect(response.perms).toContain('pw');
-      expect(response.canRead).toBeTruthy();
-      expect(response.canWrite).toBeTruthy();
-      expect(response.ev).toBeTruthy();
+      expect(response.ids).toBeDefined();
+      expect(response.status).toBe('SUCCESS');
       // await sleep(10000)
     });
     test('Lightbulb with Hue, Saturation and Color Temperature', async () => {
-      const response: any = await lightbulb.execute(lightbulbServiceHue, commandColorHSV);
+      const response = await lightbulb.execute(lightbulbServiceHue, commandColorHSV);
       expect(response).toBeDefined();
-      expect(response.type).toBe('On');
-      expect(response.value).toBeFalsy();
-      expect(response.serviceType).toContain('Lightbulb');
-      expect(response.serviceName).toContain('Trailer Step');
-      expect(response.description).toContain('On');
-      expect(response.format).toContain('bool');
-      expect(response.perms).toContain('ev');
-      expect(response.perms).toContain('pr');
-      expect(response.perms).toContain('pw');
-      expect(response.canRead).toBeTruthy();
-      expect(response.canWrite).toBeTruthy();
-      expect(response.ev).toBeTruthy();
-      // await sleep(10000)
+      expect(response.ids).toBeDefined();
+      expect(response.status).toBe('SUCCESS');
     });
 
     test('Lightbulb with Hue, Saturation and Color Temperature', async () => {
-      const response: any = await lightbulb.execute(lightbulbServiceHue, commandColorTemperature);
+      const response = await lightbulb.execute(lightbulbServiceHue, commandColorTemperature);
       expect(response).toBeDefined();
-      expect(response.type).toBe('On');
-      expect(response.value).toBeFalsy();
-      expect(response.serviceType).toContain('Lightbulb');
-      expect(response.serviceName).toContain('Trailer Step');
-      expect(response.description).toContain('On');
-      expect(response.format).toContain('bool');
-      expect(response.perms).toContain('ev');
-      expect(response.perms).toContain('pr');
-      expect(response.perms).toContain('pw');
-      expect(response.canRead).toBeTruthy();
-      expect(response.canWrite).toBeTruthy();
-      expect(response.ev).toBeTruthy();
-      // await sleep(10000)
+      expect(response.ids).toBeDefined();
+      expect(response.status).toBe('SUCCESS');
+    });
+
+    test('Lightbulb with Hue, Saturation and Color Temperature - commandMalformed', async () => {
+      const response = await lightbulb.execute(lightbulbServiceHue, commandMalformed);
+      expect(response).toBeDefined();
+      expect(response.ids).toBeDefined();
+      expect(response.status).toBe('ERROR');
+    });
+
+    test('Lightbulb with Hue, Saturation and Color Temperature - commandIncorrectCommand', async () => {
+      const response = await lightbulb.execute(lightbulbServiceHue, commandIncorrectCommand);
+      expect(response).toBeDefined();
+      expect(response.ids).toBeDefined();
+      expect(response.status).toBe('ERROR');
     });
   });
 });
@@ -156,6 +133,31 @@ async function sleep(ms: number) {
 
 const setValue = async function (value: string | number | boolean): Promise<CharacteristicType> {
   // Perform your operations here
+  const result: CharacteristicType = {
+    "aid": 1,
+    "iid": 1,
+    "uuid": "00000025-0000-1000-8000-0026BB765291",
+    "type": "On",
+    "serviceType": "Lightbulb",
+    "serviceName": "Trailer Step",
+    "description": "On",
+    "value": 0,
+    "format": "bool",
+    "perms": [
+      "ev",
+      "pr",
+      "pw"
+    ],
+    "canRead": true,
+    "canWrite": true,
+    "ev": true
+  };
+  return result;
+};
+
+const setValueError = async function (value: string | number | boolean): Promise<CharacteristicType> {
+  // Perform your operations here
+  throw new Error('Error setting value');
   const result: CharacteristicType = {
     "aid": 1,
     "iid": 1,
@@ -489,6 +491,79 @@ const lightbulbServiceOnOff: ServiceType = {
   getCharacteristic: getCharacteristic
 };
 
+const lightbulbServiceOnOffError: ServiceType = {
+  aid: 13,
+  iid: 8,
+  uuid: '00000043-0000-1000-8000-0026BB765291',
+  type: 'Lightbulb',
+  humanType: 'Lightbulb',
+  serviceName: 'Shed Light',
+  serviceCharacteristics: [
+    {
+      aid: 13,
+      iid: 10,
+      uuid: '00000025-0000-1000-8000-0026BB765291',
+      type: 'On',
+      serviceType: 'Lightbulb',
+      serviceName: 'Shed Light',
+      description: 'On',
+      value: 0,
+      format: 'bool',
+      perms: ["ev", "pr", "pw"],
+      unit: undefined,
+      maxValue: undefined,
+      minValue: undefined,
+      minStep: undefined,
+      canRead: true,
+      canWrite: true,
+      ev: true,
+      setValue: setValueError,
+      getValue: getValue
+    },
+    {
+      aid: 13,
+      iid: 11,
+      uuid: '000000E3-0000-1000-8000-0026BB765291',
+      type: 'ConfiguredName',
+      serviceType: 'Lightbulb',
+      serviceName: 'Shed Light',
+      description: 'Configured Name',
+      value: 'Shed Light',
+      format: 'string',
+      perms: ["ev", "pr", "pw"],
+      unit: undefined,
+      maxValue: undefined,
+      minValue: undefined,
+      minStep: undefined,
+      canRead: true,
+      canWrite: true,
+      ev: true,
+      setValue: setValue,
+      getValue: getValue
+    }
+  ],
+  accessoryInformation: {
+    Manufacturer: 'Tasmota',
+    Model: 'WiOn',
+    Name: 'Shed Light',
+    'Serial Number': '02231D-jessie',
+    'Firmware Revision': '9.5.0tasmota'
+  },
+  values: { On: 0, ConfiguredName: 'Shed Light' },
+  linked: undefined,
+  instance: {
+    name: 'homebridge',
+    username: '1C:22:3D:E3:CF:34',
+    ipAddress: '192.168.1.11',
+    port: 46283,
+  },
+  uniqueId: '664195d5556f1e0b424ed32bcd863ec8954c76f8ab81cc399f0e24f8827806d1',
+  refreshCharacteristics: refreshCharacteristics,
+  setCharacteristic: setCharacteristic,
+  getCharacteristic: getCharacteristic
+};
+
+
 const lightbulbServiceDimmer: ServiceType = {
   aid: 14,
   iid: 8,
@@ -598,6 +673,46 @@ const commandOnOff = {
   "execution": [
     {
       "command": "action.devices.commands.OnOff",
+      "params": {
+        "on": true
+      }
+    }
+  ]
+};
+
+const commandMalformed = {
+  "devices": [
+    {
+      "customData": {
+        "aid": 75,
+        "iid": 8,
+        "instanceIpAddress": "192.168.1.11",
+        "instancePort": 46283,
+        "instanceUsername": "1C:22:3D:E3:CF:34"
+      },
+      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
+    }
+  ],
+  "execution": [
+  ]
+};
+
+const commandIncorrectCommand = {
+  "devices": [
+    {
+      "customData": {
+        "aid": 75,
+        "iid": 8,
+        "instanceIpAddress": "192.168.1.11",
+        "instancePort": 46283,
+        "instanceUsername": "1C:22:3D:E3:CF:34"
+      },
+      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
+    }
+  ],
+  "execution": [
+    {
+      "command": "action.devices.commands.notACommand",
       "params": {
         "on": true
       }

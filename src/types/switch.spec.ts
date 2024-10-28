@@ -1,16 +1,16 @@
-import { Fan } from "./fan";
+import { Switch } from "./switch";
 import { HapClient, ServiceType, CharacteristicType } from '@homebridge/hap-client';
 import { SmartHomeV1SyncResponse, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
 import { AccessoryTypeExecuteResponse } from '../interfaces';
 
-var fan = new Fan();
+var switchDevice = new Switch('action.devices.types.SWITCH');
 
-describe('Fan', () => {
+describe('Switch', () => {
   describe('sync message', () => {
-    test('Fan with On/Off only', async () => {
-      const response: any = fan.sync(fanServiceOnOff);
+    test('Switch with On/Off only', async () => {
+      const response: any = switchDevice.sync(switchDeviceServiceOnOff);
       expect(response).toBeDefined();
-      expect(response.type).toBe('action.devices.types.FAN');
+      expect(response.type).toBe('action.devices.types.SWITCH');
       expect(response.traits).toContain('action.devices.traits.OnOff');
       expect(response.traits).not.toContain('action.devices.traits.Brightness');
       expect(response.traits).not.toContain('action.devices.traits.ColorSetting');
@@ -19,8 +19,8 @@ describe('Fan', () => {
     });
   });
   describe('query message', () => {
-    test('Fan with On/Off only', async () => {
-      const response = fan.query(fanServiceOnOff);
+    test('Switch with On/Off only', async () => {
+      const response = switchDevice.query(switchDeviceServiceOnOff);
       expect(response).toBeDefined();
       expect(response.on).toBeDefined();
       expect(response.online).toBeDefined();
@@ -29,8 +29,8 @@ describe('Fan', () => {
   });
 
   describe('execute message', () => {
-    test('Fan with On/Off only', async () => {
-      const response = await fan.execute(fanServiceOnOff, commandOnOff);
+    test('Switch with On/Off only', async () => {
+      const response = await switchDevice.execute(switchDeviceServiceOnOff, commandOnOff);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('SUCCESS');
@@ -38,24 +38,24 @@ describe('Fan', () => {
     });
 
 
-    test('Fan with On/Off only - commandMalformed', async () => {
-      const response = await fan.execute(fanServiceOnOff, commandMalformed);
+    test('Switch with On/Off only - commandMalformed', async () => {
+      const response = await switchDevice.execute(switchDeviceServiceOnOff, commandMalformed);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('ERROR');
     });
 
-    test('Fan with On/Off only - commandIncorrectCommand', async () => {
-      const response = await fan.execute(fanServiceOnOff, commandIncorrectCommand);
+    test('Switch with On/Off only - commandIncorrectCommand', async () => {
+      const response = await switchDevice.execute(switchDeviceServiceOnOff, commandIncorrectCommand);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('ERROR');
     });
 
-    test('Fan with On/Off only - Error', async () => {
+    test('Switch with On/Off only - Error', async () => {
       expect.assertions(1);
-      fanServiceOnOff.serviceCharacteristics[0].setValue = setValueError;
-      expect(fan.execute(fanServiceOnOff, commandOnOff)).rejects.toThrow('Error setting value');
+      switchDeviceServiceOnOff.serviceCharacteristics[0].setValue = setValueError;
+      expect(switchDevice.execute(switchDeviceServiceOnOff, commandOnOff)).rejects.toThrow('Error setting value');
       // await sleep(10000)
     });
   });
@@ -72,7 +72,7 @@ const setValue = async function (value: string | number | boolean): Promise<Char
     "iid": 1,
     "uuid": "00000025-0000-1000-8000-0026BB765291",
     "type": "On",
-    "serviceType": "Fan",
+    "serviceType": "Switch",
     "serviceName": "Trailer Step",
     "description": "On",
     "value": 0,
@@ -121,7 +121,7 @@ const getValue = async function (): Promise<CharacteristicType> {
     "iid": 1,
     "uuid": "00000025-0000-1000-8000-0026BB765291",
     "type": "On",
-    "serviceType": "Fan",
+    "serviceType": "Switch",
     "serviceName": "Trailer Step",
     "description": "On",
     "value": 0,
@@ -139,7 +139,7 @@ const getValue = async function (): Promise<CharacteristicType> {
 };
 
 const refreshCharacteristics = async function (): Promise<ServiceType> {
-  return fanServiceHue;
+  return switchDeviceServiceHue;
 };
 
 const setCharacteristic = async function (value: string | number | boolean): Promise<ServiceType> {
@@ -149,7 +149,7 @@ const setCharacteristic = async function (value: string | number | boolean): Pro
     "iid": 1,
     "uuid": "00000025-0000-1000-8000-0026BB765291",
     "type": "On",
-    "serviceType": "Fan",
+    "serviceType": "Switch",
     "serviceName": "Trailer Step",
     "description": "On",
     "value": 0,
@@ -163,7 +163,7 @@ const setCharacteristic = async function (value: string | number | boolean): Pro
     "canWrite": true,
     "ev": true
   };
-  return fanServiceHue;
+  return switchDeviceServiceHue;
 };
 
 const getCharacteristic = function (): CharacteristicType {
@@ -173,7 +173,7 @@ const getCharacteristic = function (): CharacteristicType {
     "iid": 1,
     "uuid": "00000025-0000-1000-8000-0026BB765291",
     "type": "On",
-    "serviceType": "Fan",
+    "serviceType": "Switch",
     "serviceName": "Trailer Step",
     "description": "On",
     "value": 0,
@@ -190,12 +190,12 @@ const getCharacteristic = function (): CharacteristicType {
   return result;
 };
 
-const fanServiceHue: ServiceType = {
+const switchDeviceServiceHue: ServiceType = {
   aid: 58,
   iid: 8,
   uuid: '00000043-0000-1000-8000-0026BB765291',
-  type: 'Fan',
-  humanType: 'Fan',
+  type: 'Switch',
+  humanType: 'Switch',
   serviceName: 'Powder Shower',
   serviceCharacteristics: [
     {
@@ -203,7 +203,7 @@ const fanServiceHue: ServiceType = {
       iid: 10,
       uuid: '00000025-0000-1000-8000-0026BB765291',
       type: 'On',
-      serviceType: 'Fan',
+      serviceType: 'Switch',
       serviceName: 'Powder Shower',
       description: 'On',
       value: 0,
@@ -224,7 +224,7 @@ const fanServiceHue: ServiceType = {
       iid: 11,
       uuid: '000000E3-0000-1000-8000-0026BB765291',
       type: 'ConfiguredName',
-      serviceType: 'Fan',
+      serviceType: 'Switch',
       serviceName: 'Powder Shower',
       description: 'Configured Name',
       value: 'Powder Shower',
@@ -245,7 +245,7 @@ const fanServiceHue: ServiceType = {
       iid: 12,
       uuid: '00000008-0000-1000-8000-0026BB765291',
       type: 'Brightness',
-      serviceType: 'Fan',
+      serviceType: 'Switch',
       serviceName: 'Powder Shower',
       description: 'Brightness',
       value: 65,
@@ -266,7 +266,7 @@ const fanServiceHue: ServiceType = {
       iid: 13,
       uuid: '00000013-0000-1000-8000-0026BB765291',
       type: 'Hue',
-      serviceType: 'Fan',
+      serviceType: 'Switch',
       serviceName: 'Powder Shower',
       description: 'Hue',
       value: 0,
@@ -287,7 +287,7 @@ const fanServiceHue: ServiceType = {
       iid: 14,
       uuid: '0000002F-0000-1000-8000-0026BB765291',
       type: 'Saturation',
-      serviceType: 'Fan',
+      serviceType: 'Switch',
       serviceName: 'Powder Shower',
       description: 'Saturation',
       value: 0,
@@ -308,7 +308,7 @@ const fanServiceHue: ServiceType = {
       iid: 15,
       uuid: '000000CE-0000-1000-8000-0026BB765291',
       type: 'ColorTemperature',
-      serviceType: 'Fan',
+      serviceType: 'Switch',
       serviceName: 'Powder Shower',
       description: 'Color Temperature',
       value: 325,
@@ -353,12 +353,12 @@ const fanServiceHue: ServiceType = {
   getCharacteristic: getCharacteristic
 };
 
-const fanServiceOnOff: ServiceType = {
+const switchDeviceServiceOnOff: ServiceType = {
   aid: 13,
   iid: 8,
   uuid: '00000043-0000-1000-8000-0026BB765291',
-  type: 'Fan',
-  humanType: 'Fan',
+  type: 'Switch',
+  humanType: 'Switch',
   serviceName: 'Shed Light',
   serviceCharacteristics: [
     {
@@ -366,7 +366,7 @@ const fanServiceOnOff: ServiceType = {
       iid: 10,
       uuid: '00000025-0000-1000-8000-0026BB765291',
       type: 'On',
-      serviceType: 'Fan',
+      serviceType: 'Switch',
       serviceName: 'Shed Light',
       description: 'On',
       value: 0,
@@ -387,7 +387,7 @@ const fanServiceOnOff: ServiceType = {
       iid: 11,
       uuid: '000000E3-0000-1000-8000-0026BB765291',
       type: 'ConfiguredName',
-      serviceType: 'Fan',
+      serviceType: 'Switch',
       serviceName: 'Shed Light',
       description: 'Configured Name',
       value: 'Shed Light',
@@ -425,12 +425,12 @@ const fanServiceOnOff: ServiceType = {
   getCharacteristic: getCharacteristic
 };
 
-const fanServiceDimmer: ServiceType = {
+const switchDeviceServiceDimmer: ServiceType = {
   aid: 14,
   iid: 8,
   uuid: '00000043-0000-1000-8000-0026BB765291',
-  type: 'Fan',
-  humanType: 'Fan',
+  type: 'Switch',
+  humanType: 'Switch',
   serviceName: 'Front Hall',
   serviceCharacteristics: [
     {
@@ -438,7 +438,7 @@ const fanServiceDimmer: ServiceType = {
       iid: 10,
       uuid: '00000025-0000-1000-8000-0026BB765291',
       type: 'On',
-      serviceType: 'Fan',
+      serviceType: 'Switch',
       serviceName: 'Front Hall',
       description: 'On',
       value: 0,
@@ -459,7 +459,7 @@ const fanServiceDimmer: ServiceType = {
       iid: 11,
       uuid: '00000008-0000-1000-8000-0026BB765291',
       type: 'Brightness',
-      serviceType: 'Fan',
+      serviceType: 'Switch',
       serviceName: 'Front Hall',
       description: 'Brightness',
       value: 100,
@@ -480,7 +480,7 @@ const fanServiceDimmer: ServiceType = {
       iid: 12,
       uuid: '000000E3-0000-1000-8000-0026BB765291',
       type: 'ConfiguredName',
-      serviceType: 'Fan',
+      serviceType: 'Switch',
       serviceName: 'Front Hall',
       description: 'Configured Name',
       value: 'Front Hall',

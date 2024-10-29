@@ -1,8 +1,10 @@
+import { Hap } from 'src/hap';
 import { Characteristic } from '../hap-types';
-import { AccessoryTypeExecuteResponse } from '../interfaces';
+import { AccessoryTypeExecuteResponse, HapDevice } from '../interfaces';
 import { ServiceType } from '@homebridge/hap-client';
+import { SmartHomeV1ExecuteResponseCommands, SmartHomeV1ExecuteRequestCommands } from 'actions-on-google';
 
-export class Television {
+export class Television implements HapDevice {
   sync(service: ServiceType) {
     return {
       id: service.uniqueId,
@@ -40,22 +42,16 @@ export class Television {
     };
   }
 
-  execute(service: ServiceType, command): AccessoryTypeExecuteResponse {
+  async execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): Promise<SmartHomeV1ExecuteResponseCommands> {
     if (!command.execution.length) {
-      return { payload: { characteristics: [] } };
+      return { ids: [service.uniqueId], status: 'ERROR', debugString: 'missing command' };
     }
-
     switch (command.execution[0].command) {
       case ('action.devices.commands.OnOff'): {
-        const payload = {
-          characteristics: [{
-            aid: service.aid,
-            iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active).iid,
-            value: command.execution[0].params.on ? 1 : 0,
-          }],
-        };
-        return { payload };
+        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active).setValue(command.execution[0].params.on ? 1 : 0);
+        return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
+      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: 'unknown command ' + command.execution[0].command }; }
     }
   }
 

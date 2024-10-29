@@ -9,7 +9,6 @@ describe('Door', () => {
   describe('sync message', () => {
     test('Door with On/Off only', async () => {
       const response: any = door.sync(doorServiceOnOff);
-      console.log(response);
       expect(response).toBeDefined();
       expect(response.type).toBe('action.devices.types.DOOR');
       expect(response.traits).toContain('action.devices.traits.OpenClose');

@@ -1,16 +1,16 @@
-import { Switch } from "./switch";
+import { Television } from "./television";
 import { HapClient, ServiceType, CharacteristicType } from '@homebridge/hap-client';
 import { SmartHomeV1SyncResponse, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
 import { AccessoryTypeExecuteResponse } from '../interfaces';
 
-var switchDevice = new Switch('action.devices.types.SWITCH');
+var television = new Television();
 
-describe('Switch', () => {
+describe('Television', () => {
   describe('sync message', () => {
-    test('Switch with On/Off only', async () => {
-      const response: any = switchDevice.sync(switchDeviceServiceOnOff);
+    test('Television with On/Off only', async () => {
+      const response: any = television.sync(televisionServiceOnOff);
       expect(response).toBeDefined();
-      expect(response.type).toBe('action.devices.types.SWITCH');
+      expect(response.type).toBe('action.devices.types.TV');
       expect(response.traits).toContain('action.devices.traits.OnOff');
       expect(response.traits).not.toContain('action.devices.traits.Brightness');
       expect(response.traits).not.toContain('action.devices.traits.ColorSetting');
@@ -19,8 +19,8 @@ describe('Switch', () => {
     });
   });
   describe('query message', () => {
-    test('Switch with On/Off only', async () => {
-      const response = switchDevice.query(switchDeviceServiceOnOff);
+    test('Television with On/Off only', async () => {
+      const response = television.query(televisionServiceOnOff);
       expect(response).toBeDefined();
       expect(response.on).toBeDefined();
       expect(response.online).toBeDefined();
@@ -29,8 +29,8 @@ describe('Switch', () => {
   });
 
   describe('execute message', () => {
-    test('Switch with On/Off only', async () => {
-      const response = await switchDevice.execute(switchDeviceServiceOnOff, commandOnOff);
+    test('Television with On/Off only', async () => {
+      const response = await television.execute(televisionServiceOnOff, commandOnOff);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('SUCCESS');
@@ -38,24 +38,24 @@ describe('Switch', () => {
     });
 
 
-    test('Switch with On/Off only - commandMalformed', async () => {
-      const response = await switchDevice.execute(switchDeviceServiceOnOff, commandMalformed);
+    test('Television with On/Off only - commandMalformed', async () => {
+      const response = await television.execute(televisionServiceOnOff, commandMalformed);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('ERROR');
     });
 
-    test('Switch with On/Off only - commandIncorrectCommand', async () => {
-      const response = await switchDevice.execute(switchDeviceServiceOnOff, commandIncorrectCommand);
+    test('Television with On/Off only - commandIncorrectCommand', async () => {
+      const response = await television.execute(televisionServiceOnOff, commandIncorrectCommand);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('ERROR');
     });
 
-    test('Switch with On/Off only - Error', async () => {
+    test('Television with On/Off only - Error', async () => {
       expect.assertions(1);
-      switchDeviceServiceOnOff.serviceCharacteristics[0].setValue = setValueError;
-      expect(switchDevice.execute(switchDeviceServiceOnOff, commandOnOff)).rejects.toThrow('Error setting value');
+      televisionServiceOnOff.serviceCharacteristics[0].setValue = setValueError;
+      expect(television.execute(televisionServiceOnOff, commandOnOff)).rejects.toThrow('Error setting value');
       // await sleep(10000)
     });
   });
@@ -72,7 +72,7 @@ const setValue = async function (value: string | number | boolean): Promise<Char
     "iid": 1,
     "uuid": "00000025-0000-1000-8000-0026BB765291",
     "type": "On",
-    "serviceType": "Switch",
+    "serviceType": "Television",
     "serviceName": "Trailer Step",
     "description": "On",
     "value": 0,
@@ -121,7 +121,7 @@ const getValue = async function (): Promise<CharacteristicType> {
     "iid": 1,
     "uuid": "00000025-0000-1000-8000-0026BB765291",
     "type": "On",
-    "serviceType": "Switch",
+    "serviceType": "Television",
     "serviceName": "Trailer Step",
     "description": "On",
     "value": 0,
@@ -139,7 +139,7 @@ const getValue = async function (): Promise<CharacteristicType> {
 };
 
 const refreshCharacteristics = async function (): Promise<ServiceType> {
-  return switchDeviceServiceHue;
+  return televisionServiceOnOff;
 };
 
 const setCharacteristic = async function (value: string | number | boolean): Promise<ServiceType> {
@@ -149,7 +149,7 @@ const setCharacteristic = async function (value: string | number | boolean): Pro
     "iid": 1,
     "uuid": "00000025-0000-1000-8000-0026BB765291",
     "type": "On",
-    "serviceType": "Switch",
+    "serviceType": "Television",
     "serviceName": "Trailer Step",
     "description": "On",
     "value": 0,
@@ -163,7 +163,7 @@ const setCharacteristic = async function (value: string | number | boolean): Pro
     "canWrite": true,
     "ev": true
   };
-  return switchDeviceServiceHue;
+  return televisionServiceOnOff;
 };
 
 const getCharacteristic = function (): CharacteristicType {
@@ -173,7 +173,7 @@ const getCharacteristic = function (): CharacteristicType {
     "iid": 1,
     "uuid": "00000025-0000-1000-8000-0026BB765291",
     "type": "On",
-    "serviceType": "Switch",
+    "serviceType": "Television",
     "serviceName": "Trailer Step",
     "description": "On",
     "value": 0,
@@ -190,183 +190,20 @@ const getCharacteristic = function (): CharacteristicType {
   return result;
 };
 
-const switchDeviceServiceHue: ServiceType = {
-  aid: 58,
-  iid: 8,
-  uuid: '00000043-0000-1000-8000-0026BB765291',
-  type: 'Switch',
-  humanType: 'Switch',
-  serviceName: 'Powder Shower',
-  serviceCharacteristics: [
-    {
-      aid: 58,
-      iid: 10,
-      uuid: '00000025-0000-1000-8000-0026BB765291',
-      type: 'On',
-      serviceType: 'Switch',
-      serviceName: 'Powder Shower',
-      description: 'On',
-      value: 0,
-      format: 'bool',
-      perms: ["ev", "pr", "pw"],
-      unit: undefined,
-      maxValue: undefined,
-      minValue: undefined,
-      minStep: undefined,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    },
-    {
-      aid: 58,
-      iid: 11,
-      uuid: '000000E3-0000-1000-8000-0026BB765291',
-      type: 'ConfiguredName',
-      serviceType: 'Switch',
-      serviceName: 'Powder Shower',
-      description: 'Configured Name',
-      value: 'Powder Shower',
-      format: 'string',
-      perms: ["ev", "pr", "pw"],
-      unit: undefined,
-      maxValue: undefined,
-      minValue: undefined,
-      minStep: undefined,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    },
-    {
-      aid: 58,
-      iid: 12,
-      uuid: '00000008-0000-1000-8000-0026BB765291',
-      type: 'Brightness',
-      serviceType: 'Switch',
-      serviceName: 'Powder Shower',
-      description: 'Brightness',
-      value: 65,
-      format: 'int',
-      perms: ["ev", "pr", "pw"],
-      unit: 'percentage',
-      maxValue: 100,
-      minValue: 0,
-      minStep: 1,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    },
-    {
-      aid: 58,
-      iid: 13,
-      uuid: '00000013-0000-1000-8000-0026BB765291',
-      type: 'Hue',
-      serviceType: 'Switch',
-      serviceName: 'Powder Shower',
-      description: 'Hue',
-      value: 0,
-      format: 'float',
-      perms: ["ev", "pr", "pw"],
-      unit: 'arcdegrees',
-      maxValue: 360,
-      minValue: 0,
-      minStep: 1,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    },
-    {
-      aid: 58,
-      iid: 14,
-      uuid: '0000002F-0000-1000-8000-0026BB765291',
-      type: 'Saturation',
-      serviceType: 'Switch',
-      serviceName: 'Powder Shower',
-      description: 'Saturation',
-      value: 0,
-      format: 'float',
-      perms: ["ev", "pr", "pw"],
-      unit: 'percentage',
-      maxValue: 100,
-      minValue: 0,
-      minStep: 1,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    },
-    {
-      aid: 58,
-      iid: 15,
-      uuid: '000000CE-0000-1000-8000-0026BB765291',
-      type: 'ColorTemperature',
-      serviceType: 'Switch',
-      serviceName: 'Powder Shower',
-      description: 'Color Temperature',
-      value: 325,
-      format: 'int',
-      perms: ["ev", "pr", "pw"],
-      unit: undefined,
-      maxValue: 500,
-      minValue: 140,
-      minStep: 1,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }
-  ],
-  accessoryInformation: {
-    Manufacturer: 'Tasmota',
-    Model: 'Tuya MCU',
-    Name: 'Powder Shower',
-    'Serial Number': 'ED8243-jessie',
-    'Firmware Revision': '9.5.0tasmota'
-  },
-  values: {
-    On: 0,
-    ConfiguredName: 'Powder Shower',
-    Brightness: 65,
-    Hue: 0,
-    Saturation: 0,
-    ColorTemperature: 325
-  },
-  linked: undefined,
-  instance: {
-    name: 'homebridge',
-    username: '1C:22:3D:E3:CF:34',
-    ipAddress: '192.168.1.11',
-    port: 46283
-  },
-  uniqueId: '2a1f1a87419c2afbd847828b96095f892975c36572751ab71f53edf0c5372fdb',
-  refreshCharacteristics: refreshCharacteristics,
-  setCharacteristic: setCharacteristic,
-  getCharacteristic: getCharacteristic
-};
-
-const switchDeviceServiceOnOff: ServiceType = {
+const televisionServiceOnOff: ServiceType = {
   aid: 13,
   iid: 8,
   uuid: '00000043-0000-1000-8000-0026BB765291',
-  type: 'Switch',
-  humanType: 'Switch',
+  type: 'Television',
+  humanType: 'Television',
   serviceName: 'Shed Light',
   serviceCharacteristics: [
     {
       aid: 13,
       iid: 10,
-      uuid: '00000025-0000-1000-8000-0026BB765291',
-      type: 'On',
-      serviceType: 'Switch',
+      uuid: '000000B0-0000-1000-8000-0026BB765291',
+      type: 'Active',
+      serviceType: 'Television',
       serviceName: 'Shed Light',
       description: 'On',
       value: 0,
@@ -387,7 +224,7 @@ const switchDeviceServiceOnOff: ServiceType = {
       iid: 11,
       uuid: '000000E3-0000-1000-8000-0026BB765291',
       type: 'ConfiguredName',
-      serviceType: 'Switch',
+      serviceType: 'Television',
       serviceName: 'Shed Light',
       description: 'Configured Name',
       value: 'Shed Light',
@@ -426,12 +263,12 @@ const switchDeviceServiceOnOff: ServiceType = {
   getCharacteristic: getCharacteristic
 };
 
-const switchDeviceServiceDimmer: ServiceType = {
+const televisionServiceDimmer: ServiceType = {
   aid: 14,
   iid: 8,
   uuid: '00000043-0000-1000-8000-0026BB765291',
-  type: 'Switch',
-  humanType: 'Switch',
+  type: 'Television',
+  humanType: 'Television',
   serviceName: 'Front Hall',
   serviceCharacteristics: [
     {
@@ -439,7 +276,7 @@ const switchDeviceServiceDimmer: ServiceType = {
       iid: 10,
       uuid: '00000025-0000-1000-8000-0026BB765291',
       type: 'On',
-      serviceType: 'Switch',
+      serviceType: 'Television',
       serviceName: 'Front Hall',
       description: 'On',
       value: 0,
@@ -460,7 +297,7 @@ const switchDeviceServiceDimmer: ServiceType = {
       iid: 11,
       uuid: '00000008-0000-1000-8000-0026BB765291',
       type: 'Brightness',
-      serviceType: 'Switch',
+      serviceType: 'Television',
       serviceName: 'Front Hall',
       description: 'Brightness',
       value: 100,
@@ -481,7 +318,7 @@ const switchDeviceServiceDimmer: ServiceType = {
       iid: 12,
       uuid: '000000E3-0000-1000-8000-0026BB765291',
       type: 'ConfiguredName',
-      serviceType: 'Switch',
+      serviceType: 'Television',
       serviceName: 'Front Hall',
       description: 'Configured Name',
       value: 'Front Hall',

@@ -1,148 +1,101 @@
-import { Hap } from "./hap";
+import { WindowCovering } from "./window-covering";
 import { HapClient, ServiceType, CharacteristicType } from '@homebridge/hap-client';
-import { SmartHomeV1SyncResponse, SmartHomeV1QueryRequestDevices, SmartHomeV1ExecuteRequest } from 'actions-on-google';
-import { Log } from './logger';
-import { PluginConfig } from './interfaces';
+import { SmartHomeV1SyncResponse, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
+import { AccessoryTypeExecuteResponse } from '../interfaces';
 
+var windowCovering = new WindowCovering();
 
-// socket, log, pin: string, config: PluginConfig
-
-
-
-class socketMock {
-  on(event: string, callback: any) {
-    if (event === 'websocket-status') {
-      callback('websocket-status');
-    }
-    if (event === 'json') {
-      callback({ serverMessage: 'serverMessage' });
-    }
-  }
-
-  sendJson(data: any) {
-    console.log('sendJson', data);
-  }
-}
-
-const config: PluginConfig = {
-  "name": "Google Smart Home",
-  "token": "1234567890",
-  "notice": "Keep your token a secret!",
-  "debug": false,
-  "platform": "google-smarthome",
-  "twoFactorAuthPin": "123-456",
-};
-
-var log = new Log(console, true);
-
-var hap = new Hap(socketMock, log, "031-45-154", config);
-
-describe('Process the QUERY intent', () => {
-  test('Wait for HAP to be Ready', async () => {
-    while (!hap.ready) {
-      // console.log('waiting for hap to be ready');
-      await sleep(500);
-    }
-    console.log('hap ready, testing started');
-  }, 20000);
-
-  describe('QUERY message with delay to allow manual testing', () => {
-    test('Lightbulb with On/Off only', async () => {
-      const response: any = await hap.query(query);
-      // console.log('response', response);
+describe('Window', () => {
+  describe('sync message', () => {
+    test('Window Coveringwith On/Off only', async () => {
+      const response: any = windowCovering.sync(windowCoveringServiceOnOff);
+      expect(response).toBeDefined();
+      expect(response.type).toBe('action.devices.types.BLINDS');
+      expect(response.traits).toContain('action.devices.traits.OpenClose');
+      expect(response.traits).not.toContain('action.devices.traits.Brightness');
+      expect(response.traits).not.toContain('action.devices.traits.ColorSetting');
+      expect(response.attributes).toBeDefined();
+      expect(response.attributes.openDirection).toBeDefined();
+      expect(response.attributes.openDirection).toContain('UP');
+      expect(response.attributes.openDirection).toContain('DOWN');
+      expect(response.name).toBeDefined();
+      // await sleep(10000)
     });
-    test('Sleeping', async () => {
-      await sleep(5000);
-
-    }, 30000);
-    test('Lightbulb with On/Off only', async () => {
-      const response: any = await hap.query(query);
-      // console.log('response', response);
+  });
+  describe('query message', () => {
+    test('Window Coveringwith On/Off only', async () => {
+      const response = windowCovering.query(windowCoveringServiceOnOff);
+      expect(response).toBeDefined();
+      expect(response.on).toBeDefined();
+      expect(response.online).toBeDefined();
+      // await sleep(10000)
     });
-    test('Sleeping', async () => {
-      await sleep(5000);
-
-    }, 30000);
-    test('Lightbulb with On/Off only', async () => {
-      const response: any = await hap.query(query);
-      // console.log('response', response);
-    });
-
   });
 
+  describe('execute message', () => {
+    test('Window Coveringwith On/Off only', async () => {
+      const response = await windowCovering.execute(windowCoveringServiceOnOff, commandOpenClose);
+      expect(response).toBeDefined();
+      expect(response.ids).toBeDefined();
+      expect(response.status).toBe('SUCCESS');
+      // await sleep(10000)
+    });
 
-  afterAll(async () => {
-    console.log('destroy');
-    await hap.destroy();
+
+    test('Window Coveringwith On/Off only - commandMalformed', async () => {
+      const response = await windowCovering.execute(windowCoveringServiceOnOff, commandMalformed);
+      expect(response).toBeDefined();
+      expect(response.ids).toBeDefined();
+      expect(response.status).toBe('ERROR');
+    });
+
+    test('Window Coveringwith On/Off only - commandIncorrectCommand', async () => {
+      const response = await windowCovering.execute(windowCoveringServiceOnOff, commandIncorrectCommand);
+      expect(response).toBeDefined();
+      expect(response.ids).toBeDefined();
+      expect(response.status).toBe('ERROR');
+    });
+
+    test('Window Coveringwith On/Off only - Error', async () => {
+      expect.assertions(1);
+      windowCoveringServiceOnOff.serviceCharacteristics[1].setValue = setValueError;
+      expect(windowCovering.execute(windowCoveringServiceOnOff, commandOpenClose)).rejects.toThrow('Error setting value');
+      // await sleep(10000)
+    });
   });
-
 });
 
 async function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-
-
-const execute = {
-  "inputs": [
-    {
-      "context": {
-        "locale_country": "US",
-        "locale_language": "en"
-      },
-      "intent": "action.devices.EXECUTE",
-      "payload": {
-        "commands": [
-          {
-            "devices": [
-              {
-                "customData": {
-                  "aid": 75,
-                  "iid": 8,
-                  "instanceIpAddress": "192.168.1.11",
-                  "instancePort": 46283,
-                  "instanceUsername": "1C:22:3D:E3:CF:34"
-                },
-                "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-              }
-            ],
-            "execution": [
-              {
-                "command": "action.devices.commands.OnOff",
-                "params": {
-                  "on": false
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "requestId": "3137481448496135047"
-    }
-  ],
-  "requestId": "3137481448496135047"
-};
-
-const query: SmartHomeV1QueryRequestDevices[] = [
-  {
-    "customData": {
-      "aid": 75,
-      "iid": 8,
-      "instanceIpAddress": "192.168.1.11",
-      "instancePort": 46283,
-      "instanceUsername": "1C:22:3D:E3:CF:34"
-    },
-    "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-  }];
-
-/* ----------------- */
-
-
-
 const setValue = async function (value: string | number | boolean): Promise<CharacteristicType> {
   // Perform your operations here
-  console.log('setValue', value);
+  const result: CharacteristicType = {
+    "aid": 1,
+    "iid": 1,
+    "uuid": "00000025-0000-1000-8000-0026BB765291",
+    "type": "On",
+    "serviceType": "Window",
+    "serviceName": "Trailer Step",
+    "description": "On",
+    "value": 0,
+    "format": "bool",
+    "perms": [
+      "ev",
+      "pr",
+      "pw"
+    ],
+    "canRead": true,
+    "canWrite": true,
+    "ev": true
+  };
+  return result;
+};
+
+const setValueError = async function (value: string | number | boolean): Promise<CharacteristicType> {
+  // Perform your operations here
+  throw new Error('Error setting value');
   const result: CharacteristicType = {
     "aid": 1,
     "iid": 1,
@@ -172,7 +125,7 @@ const getValue = async function (): Promise<CharacteristicType> {
     "iid": 1,
     "uuid": "00000025-0000-1000-8000-0026BB765291",
     "type": "On",
-    "serviceType": "Lightbulb",
+    "serviceType": "Window",
     "serviceName": "Trailer Step",
     "description": "On",
     "value": 0,
@@ -190,7 +143,7 @@ const getValue = async function (): Promise<CharacteristicType> {
 };
 
 const refreshCharacteristics = async function (): Promise<ServiceType> {
-  return hapServiceHue;
+  return windowCoveringServiceOnOff;
 };
 
 const setCharacteristic = async function (value: string | number | boolean): Promise<ServiceType> {
@@ -200,7 +153,7 @@ const setCharacteristic = async function (value: string | number | boolean): Pro
     "iid": 1,
     "uuid": "00000025-0000-1000-8000-0026BB765291",
     "type": "On",
-    "serviceType": "Lightbulb",
+    "serviceType": "Window",
     "serviceName": "Trailer Step",
     "description": "On",
     "value": 0,
@@ -214,7 +167,7 @@ const setCharacteristic = async function (value: string | number | boolean): Pro
     "canWrite": true,
     "ev": true
   };
-  return hapServiceHue;
+  return windowCoveringServiceOnOff;
 };
 
 const getCharacteristic = function (): CharacteristicType {
@@ -224,7 +177,7 @@ const getCharacteristic = function (): CharacteristicType {
     "iid": 1,
     "uuid": "00000025-0000-1000-8000-0026BB765291",
     "type": "On",
-    "serviceType": "Lightbulb",
+    "serviceType": "Window",
     "serviceName": "Trailer Step",
     "description": "On",
     "value": 0,
@@ -241,21 +194,21 @@ const getCharacteristic = function (): CharacteristicType {
   return result;
 };
 
-const hapServiceHue: ServiceType = {
-  aid: 58,
+const windowCoveringServiceOnOff: ServiceType = {
+  aid: 13,
   iid: 8,
   uuid: '00000043-0000-1000-8000-0026BB765291',
-  type: 'Lightbulb',
-  humanType: 'Lightbulb',
-  serviceName: 'Powder Shower',
+  type: 'Window',
+  humanType: 'Window',
+  serviceName: 'Shed Light',
   serviceCharacteristics: [
     {
-      aid: 58,
+      aid: 13,
       iid: 10,
-      uuid: '00000025-0000-1000-8000-0026BB765291',
-      type: 'On',
-      serviceType: 'Lightbulb',
-      serviceName: 'Powder Shower',
+      uuid: '000000B0-0000-1000-8000-0026BB765291',
+      type: 'Active',
+      serviceType: 'Window',
+      serviceName: 'Shed Light',
       description: 'On',
       value: 0,
       format: 'bool',
@@ -271,15 +224,15 @@ const hapServiceHue: ServiceType = {
       getValue: getValue
     },
     {
-      aid: 58,
-      iid: 11,
-      uuid: '000000E3-0000-1000-8000-0026BB765291',
-      type: 'ConfiguredName',
-      serviceType: 'Lightbulb',
-      serviceName: 'Powder Shower',
-      description: 'Configured Name',
-      value: 'Powder Shower',
-      format: 'string',
+      aid: 13,
+      iid: 10,
+      uuid: '0000007C-0000-1000-8000-0026BB765291',
+      type: 'TargetPosition',
+      serviceType: 'Window',
+      serviceName: 'Shed Light',
+      description: 'On',
+      value: 0,
+      format: 'bool',
       perms: ["ev", "pr", "pw"],
       unit: undefined,
       maxValue: undefined,
@@ -292,133 +245,11 @@ const hapServiceHue: ServiceType = {
       getValue: getValue
     },
     {
-      aid: 58,
-      iid: 12,
-      uuid: '00000008-0000-1000-8000-0026BB765291',
-      type: 'Brightness',
-      serviceType: 'Lightbulb',
-      serviceName: 'Powder Shower',
-      description: 'Brightness',
-      value: 65,
-      format: 'int',
-      perms: ["ev", "pr", "pw"],
-      unit: 'percentage',
-      maxValue: 100,
-      minValue: 0,
-      minStep: 1,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    },
-    {
-      aid: 58,
-      iid: 13,
-      uuid: '00000013-0000-1000-8000-0026BB765291',
-      type: 'Hue',
-      serviceType: 'Lightbulb',
-      serviceName: 'Powder Shower',
-      description: 'Hue',
-      value: 0,
-      format: 'float',
-      perms: ["ev", "pr", "pw"],
-      unit: 'arcdegrees',
-      maxValue: 360,
-      minValue: 0,
-      minStep: 1,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    },
-    {
-      aid: 58,
-      iid: 14,
-      uuid: '0000002F-0000-1000-8000-0026BB765291',
-      type: 'Saturation',
-      serviceType: 'Lightbulb',
-      serviceName: 'Powder Shower',
-      description: 'Saturation',
-      value: 0,
-      format: 'float',
-      perms: ["ev", "pr", "pw"],
-      unit: 'percentage',
-      maxValue: 100,
-      minValue: 0,
-      minStep: 1,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    },
-    {
-      aid: 58,
-      iid: 15,
-      uuid: '000000CE-0000-1000-8000-0026BB765291',
-      type: 'ColorTemperature',
-      serviceType: 'Lightbulb',
-      serviceName: 'Powder Shower',
-      description: 'Color Temperature',
-      value: 325,
-      format: 'int',
-      perms: ["ev", "pr", "pw"],
-      unit: undefined,
-      maxValue: 500,
-      minValue: 140,
-      minStep: 1,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }
-  ],
-  accessoryInformation: {
-    Manufacturer: 'Tasmota',
-    Model: 'Tuya MCU',
-    Name: 'Powder Shower',
-    'Serial Number': 'ED8243-jessie',
-    'Firmware Revision': '9.5.0tasmota'
-  },
-  values: {
-    On: 0,
-    ConfiguredName: 'Powder Shower',
-    Brightness: 65,
-    Hue: 0,
-    Saturation: 0,
-    ColorTemperature: 325
-  },
-  linked: undefined,
-  instance: {
-    name: 'homebridge',
-    username: '1C:22:3D:E3:CF:34',
-    ipAddress: '192.168.1.11',
-    port: 46283,
-
-  },
-  uniqueId: '2a1f1a87419c2afbd847828b96095f892975c36572751ab71f53edf0c5372fdb',
-  refreshCharacteristics: refreshCharacteristics,
-  setCharacteristic: setCharacteristic,
-  getCharacteristic: getCharacteristic
-};
-
-const hapServiceOnOff: ServiceType = {
-  aid: 13,
-  iid: 8,
-  uuid: '00000043-0000-1000-8000-0026BB765291',
-  type: 'Lightbulb',
-  humanType: 'Lightbulb',
-  serviceName: 'Shed Light',
-  serviceCharacteristics: [
-    {
       aid: 13,
       iid: 10,
-      uuid: '00000025-0000-1000-8000-0026BB765291',
-      type: 'On',
-      serviceType: 'Lightbulb',
+      uuid: '0000006D-0000-1000-8000-0026BB765291',
+      type: 'CurrentPosition',
+      serviceType: 'Window',
       serviceName: 'Shed Light',
       description: 'On',
       value: 0,
@@ -439,7 +270,7 @@ const hapServiceOnOff: ServiceType = {
       iid: 11,
       uuid: '000000E3-0000-1000-8000-0026BB765291',
       type: 'ConfiguredName',
-      serviceType: 'Lightbulb',
+      serviceType: 'Window',
       serviceName: 'Shed Light',
       description: 'Configured Name',
       value: 'Shed Light',
@@ -478,12 +309,12 @@ const hapServiceOnOff: ServiceType = {
   getCharacteristic: getCharacteristic
 };
 
-const hapServiceDimmer: ServiceType = {
+const windowCoveringServiceDimmer: ServiceType = {
   aid: 14,
   iid: 8,
   uuid: '00000043-0000-1000-8000-0026BB765291',
-  type: 'Lightbulb',
-  humanType: 'Lightbulb',
+  type: 'Window',
+  humanType: 'Window',
   serviceName: 'Front Hall',
   serviceCharacteristics: [
     {
@@ -491,7 +322,7 @@ const hapServiceDimmer: ServiceType = {
       iid: 10,
       uuid: '00000025-0000-1000-8000-0026BB765291',
       type: 'On',
-      serviceType: 'Lightbulb',
+      serviceType: 'Window',
       serviceName: 'Front Hall',
       description: 'On',
       value: 0,
@@ -512,7 +343,7 @@ const hapServiceDimmer: ServiceType = {
       iid: 11,
       uuid: '00000008-0000-1000-8000-0026BB765291',
       type: 'Brightness',
-      serviceType: 'Lightbulb',
+      serviceType: 'Window',
       serviceName: 'Front Hall',
       description: 'Brightness',
       value: 100,
@@ -533,7 +364,7 @@ const hapServiceDimmer: ServiceType = {
       iid: 12,
       uuid: '000000E3-0000-1000-8000-0026BB765291',
       type: 'ConfiguredName',
-      serviceType: 'Lightbulb',
+      serviceType: 'Window',
       serviceName: 'Front Hall',
       description: 'Configured Name',
       value: 'Front Hall',
@@ -563,8 +394,7 @@ const hapServiceDimmer: ServiceType = {
     name: 'homebridge',
     username: '1C:22:3D:E3:CF:34',
     ipAddress: '192.168.1.11',
-    port: 46283,
-
+    port: 46283
   },
   uniqueId: '028fc478c0b4b116ead9be0dc8a72251b351b745cbc3961704268737101c803d',
   refreshCharacteristics: refreshCharacteristics,
@@ -588,6 +418,69 @@ const commandOnOff = {
   "execution": [
     {
       "command": "action.devices.commands.OnOff",
+      "params": {
+        "on": true
+      }
+    }
+  ]
+};
+
+const commandOpenClose = {
+  "devices": [
+    {
+      "customData": {
+        "aid": 75,
+        "iid": 8,
+        "instanceIpAddress": "192.168.1.11",
+        "instancePort": 46283,
+        "instanceUsername": "1C:22:3D:E3:CF:34"
+      },
+      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
+    }
+  ],
+  "execution": [
+    {
+      "command": "action.devices.commands.OpenClose",
+      "params": {
+        "openPercent": 50
+      }
+    }
+  ]
+};
+
+const commandMalformed = {
+  "devices": [
+    {
+      "customData": {
+        "aid": 75,
+        "iid": 8,
+        "instanceIpAddress": "192.168.1.11",
+        "instancePort": 46283,
+        "instanceUsername": "1C:22:3D:E3:CF:34"
+      },
+      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
+    }
+  ],
+  "execution": [
+  ]
+};
+
+const commandIncorrectCommand = {
+  "devices": [
+    {
+      "customData": {
+        "aid": 75,
+        "iid": 8,
+        "instanceIpAddress": "192.168.1.11",
+        "instancePort": 46283,
+        "instanceUsername": "1C:22:3D:E3:CF:34"
+      },
+      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
+    }
+  ],
+  "execution": [
+    {
+      "command": "action.devices.commands.notACommand",
       "params": {
         "on": true
       }

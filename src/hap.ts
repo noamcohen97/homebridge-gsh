@@ -32,7 +32,9 @@ export class Hap {
   config: PluginConfig;
   hapClient: HapClient;
   services: ServiceType[] = [];
-  discoveryTimeout: NodeJS.Timeout;
+  private startTimeout: NodeJS.Timeout;
+  private discoveryTimeout: NodeJS.Timeout;
+  private syncTimeout: NodeJS.Timeout
 
   public ready: boolean;
 
@@ -101,7 +103,7 @@ export class Hap {
     this.instanceBlacklist = config.instanceBlacklist || [];
 
     this.log.debug('Waiting 15 seconds before starting instance discovery...');
-    setTimeout(() => {
+    this.startTimeout = setTimeout(() => {
       this.discover();
     }, 1000);
 
@@ -149,7 +151,7 @@ export class Hap {
       this.log.debug('No more instances discovered, publishing services');
       this.hapClient.removeListener('instance-discovered', this.waitForNoMoreDiscoveries);
       this.start();
-      setTimeout(() => {
+      this.syncTimeout = setTimeout(() => {
         this.requestSync();
       }, 15000);
     }, 5000);
@@ -360,6 +362,11 @@ export class Hap {
    * Close the HAP connection, used for testing
    */
   public async destroy() {
-    this.hapClient.resetInstancePool();
+    if (this.startTimeout) clearTimeout(this.startTimeout);
+    if (this.discoveryTimeout) clearTimeout(this.discoveryTimeout);
+    if (this.syncTimeout) clearTimeout(this.syncTimeout);
+    if (this.hapClient) {
+      //await this.hapClient.destroy();
+    }
   }
 }

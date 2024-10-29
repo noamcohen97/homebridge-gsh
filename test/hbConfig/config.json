@@ -25,9 +25,11 @@
         },
         {
             "name": "Google Smart Home",
-            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Imdvb2dsZS1vYXV0aDJ8MTA5NTc0MTIyNTIwNTY4MjEyMzgyIiwiaWF0IjoxNzI5ODcwMzM4fQ.TZWeFEZzJ7dmsZ3EFlCHpSedwsHFZnIDQepJzCEZaH0",
-            "notice": "Keep your token a secret!",
             "debug": true,
+            "accessoryFilter": [
+                "fdfdfd",
+                "dsdsds"
+            ],
             "platform": "google-smarthome"
         }
     ],

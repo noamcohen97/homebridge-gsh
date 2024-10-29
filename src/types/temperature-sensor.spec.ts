@@ -95,6 +95,10 @@ describe('TemperatureSensor', () => {
     });
     */
   });
+  afterAll(async () => {
+    console.log('destroy');
+    await hap.destroy();
+  });
 });
 
 async function sleep(ms: number) {
@@ -291,6 +295,7 @@ const temperatureSensorTemp: ServiceType = {
     username: '1C:22:3D:E3:CF:34',
     ipAddress: '192.168.1.11',
     port: 46283,
+
   },
   uniqueId: '664195d5556f1e0b424ed32bcd863ec8954c76f8ab81cc399f0e24f8827806d1',
   refreshCharacteristics: refreshCharacteristics,
@@ -364,6 +369,7 @@ const temperatureSensorServiceOnOff: ServiceType = {
     username: '1C:22:3D:E3:CF:34',
     ipAddress: '192.168.1.11',
     port: 46283,
+
   },
   uniqueId: '664195d5556f1e0b424ed32bcd863ec8954c76f8ab81cc399f0e24f8827806d1',
   refreshCharacteristics: refreshCharacteristics,

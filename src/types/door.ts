@@ -4,7 +4,7 @@ import { AccessoryTypeExecuteResponse, HapDevice } from '../interfaces';
 import { ServiceType } from '@homebridge/hap-client';
 import { SmartHomeV1ExecuteResponseCommands, SmartHomeV1ExecuteRequestCommands } from 'actions-on-google';
 
-export class Door {
+export class Door implements HapDevice {
   sync(service: ServiceType) {
     return {
       id: service.uniqueId,

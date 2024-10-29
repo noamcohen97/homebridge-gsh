@@ -1,8 +1,9 @@
 import { Characteristic } from '../hap-types';
-import { AccessoryTypeExecuteResponse } from '../interfaces';
+import { AccessoryTypeExecuteResponse, HapDevice } from '../interfaces';
 import { ServiceType } from '@homebridge/hap-client';
+import { SmartHomeV1ExecuteResponseCommands, SmartHomeV1ExecuteRequestCommands } from 'actions-on-google';
 
-export class SecuritySystem {
+export class SecuritySystem implements HapDevice {
   public twoFactorRequired = true;
   public returnStateOnExecute = true;
 
@@ -94,9 +95,9 @@ export class SecuritySystem {
     return response;
   }
 
-  execute(service: ServiceType, command): AccessoryTypeExecuteResponse {
+  async execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): Promise<SmartHomeV1ExecuteResponseCommands> {
     if (!command.execution.length) {
-      return { payload: { characteristics: [] } };
+      return { ids: [service.uniqueId], status: 'ERROR', debugString: 'missing command' };
     }
 
     switch (command.execution[0].command) {
@@ -116,21 +117,15 @@ export class SecuritySystem {
           securitySystemTargetState = mode.OFF;
         }
 
-        const payload = {
-          characteristics: [{
-            aid: service.aid,
-            iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.SecuritySystemTargetState).iid,
-            value: securitySystemTargetState,
-          }],
-        };
+        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.SecuritySystemTargetState).setValue(securitySystemTargetState);
 
         const states = {
           isArmed: command.execution[0].params.arm,
           currentArmLevel: command.execution[0].params.armLevel,
         };
-
-        return { payload, states };
+        return { ids: [service.uniqueId], status: 'SUCCESS', states: states };
       }
+      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: 'unknown command ' + command.execution[0].command }; }
     }
   }
 

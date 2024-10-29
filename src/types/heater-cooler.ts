@@ -1,9 +1,10 @@
+import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1SyncDevices, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
 import { Characteristic } from '../hap-types';
-import { AccessoryTypeExecuteResponse } from '../interfaces';
+import { AccessoryTypeExecuteResponse, HapDevice } from '../interfaces';
 import { ServiceType } from '@homebridge/hap-client';
 import { Hap } from '../hap';
 
-export class HeaterCooler {
+export class HeaterCooler implements HapDevice {
   constructor(
     private hap: Hap,
   ) { }
@@ -81,9 +82,9 @@ export class HeaterCooler {
     return response;
   }
 
-  execute(service: ServiceType, command): AccessoryTypeExecuteResponse {
+  async execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): Promise<SmartHomeV1ExecuteResponseCommands> {
     if (!command.execution.length) {
-      return { payload: { characteristics: [] } };
+      return { ids: [service.uniqueId], status: 'ERROR', debugString: 'missing command' };
     }
 
     switch (command.execution[0].command) {
@@ -94,67 +95,28 @@ export class HeaterCooler {
           cool: 2,
           heatcool: 0,
         };
-        let payload;
 
         if (command.execution[0].params.thermostatMode === 'off') {
-          payload = {
-            characteristics: [{
-              aid: service.aid,
-              iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active).iid,
-              value: 0,
-            }],
-          };
+          await service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active).setValue(0);
         } else {
-          payload = {
-            characteristics: [
-              {
-                aid: service.aid,
-                iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active).iid,
-                value: 1,
-              }, {
-                aid: service.aid,
-                iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.TargetHeaterCoolerState).iid,
-                value: mode[command.execution[0].params.thermostatMode],
-              },
-            ],
-          };
+          await service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active).setValue(1)
+          await service.serviceCharacteristics.find(x => x.uuid === Characteristic.TargetHeaterCoolerState).setValue(mode[command.execution[0].params.thermostatMode]);
+
         }
-        return { payload };
+        return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
       case ('action.devices.commands.ThermostatTemperatureSetpoint'): {
-        const payload = {
-          characteristics: [
-            {
-              aid: service.aid,
-              iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CoolingThresholdTemperature).iid,
-              value: command.execution[0].params.thermostatTemperatureSetpoint,
-            },
-            {
-              aid: service.aid,
-              iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.HeatingThresholdTemperature).iid,
-              value: command.execution[0].params.thermostatTemperatureSetpoint,
-            },
-          ],
-        };
-        return { payload };
+        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.CoolingThresholdTemperature).setValue(command.execution[0].params.thermostatTemperatureSetpoint)
+        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.HeatingThresholdTemperature).setValue(command.execution[0].params.thermostatTemperatureSetpoint);
+        return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
       case ('action.devices.commands.ThermostatTemperatureSetRange'): {
-        const payload = {
-          characteristics: [
-            {
-              aid: service.aid,
-              iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CoolingThresholdTemperature).iid,
-              value: command.execution[0].params.thermostatTemperatureSetpointHigh,
-            },
-            {
-              aid: service.aid,
-              iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.HeatingThresholdTemperature).iid,
-              value: command.execution[0].params.thermostatTemperatureSetpointLow,
-            }],
-        };
-        return { payload };
+        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.CoolingThresholdTemperature).setValue(command.execution[0].params.thermostatTemperatureSetpointHigh)
+        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.HeatingThresholdTemperature).setValue(command.execution[0].params.thermostatTemperatureSetpointLow);
+        return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
+      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: 'unknown command ' + command.execution[0].command }; }
+
     }
   }
-
 }

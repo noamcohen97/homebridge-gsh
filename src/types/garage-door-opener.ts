@@ -1,9 +1,9 @@
-import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
+import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1SyncDevices, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
 import { Characteristic } from '../hap-types';
-import { AccessoryTypeExecuteResponse } from '../interfaces';
+import { AccessoryTypeExecuteResponse, HapDevice } from '../interfaces';
 import { ServiceType } from '@homebridge/hap-client';
 
-export class GarageDoorOpener {
+export class GarageDoorOpener implements HapDevice {
   public twoFactorRequired = true;
 
   sync(service: ServiceType): SmartHomeV1SyncDevices {
@@ -57,22 +57,17 @@ export class GarageDoorOpener {
     } as any;
   }
 
-  execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): AccessoryTypeExecuteResponse {
+  async execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): Promise<SmartHomeV1ExecuteResponseCommands> {
     if (!command.execution.length) {
-      return { payload: { characteristics: [] } };
+      return { ids: [service.uniqueId], status: 'ERROR', debugString: 'missing command' };
     }
 
     switch (command.execution[0].command) {
       case ('action.devices.commands.OpenClose'): {
-        const payload = {
-          characteristics: [{
-            aid: service.aid,
-            iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.TargetDoorState).iid,
-            value: command.execution[0].params.openPercent ? 0 : 1,
-          }],
-        };
-        return { payload };
+        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.TargetDoorState).setValue(command.execution[0].params.openPercent ? 0 : 1);
+        return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
+      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: 'unknown command ' + command.execution[0].command }; }
     }
   }
 

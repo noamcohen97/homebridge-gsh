@@ -1,8 +1,9 @@
 import { Characteristic } from '../hap-types';
-import { AccessoryTypeExecuteResponse } from '../interfaces';
+import { AccessoryTypeExecuteResponse, HapDevice } from '../interfaces';
 import { ServiceType } from '@homebridge/hap-client';
+import { SmartHomeV1ExecuteResponseCommands, SmartHomeV1ExecuteRequestCommands } from 'actions-on-google';
 
-export class LockMechanism {
+export class LockMechanism implements HapDevice {
   public twoFactorRequired = true;
 
   sync(service: ServiceType) {
@@ -68,22 +69,19 @@ export class LockMechanism {
     return response;
   }
 
-  execute(service: ServiceType, command): AccessoryTypeExecuteResponse {
+  async execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): Promise<SmartHomeV1ExecuteResponseCommands> {
     if (!command.execution.length) {
-      return { payload: { characteristics: [] } };
+      return { ids: [service.uniqueId], status: 'ERROR', debugString: 'missing command' };
     }
 
     switch (command.execution[0].command) {
       case ('action.devices.commands.LockUnlock'): {
-        const payload = {
-          characteristics: [{
-            aid: service.aid,
-            iid: service.serviceCharacteristics.find(x => x.uuid === Characteristic.LockTargetState).iid,
-            value: command.execution[0].params.lock ? 1 : 0,
-          }],
-        };
-        return { payload };
+
+        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.LockTargetState).setValue(command.execution[0].params.lock ? 1 : 0);
+        return { ids: [service.uniqueId], status: 'SUCCESS' };
+
       }
+      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: 'unknown command ' + command.execution[0].command }; }
     }
   }
 
@@ -98,6 +96,7 @@ export class LockMechanism {
           return true;
         }
       }
+      default: { return false; }
     }
 
     return false;

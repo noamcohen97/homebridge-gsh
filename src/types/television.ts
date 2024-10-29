@@ -1,43 +1,21 @@
-import { Hap } from 'src/hap';
-import { Characteristic } from '../hap-types';
-import { AccessoryTypeExecuteResponse, HapDevice } from '../interfaces';
 import { ServiceType } from '@homebridge/hap-client';
-import { SmartHomeV1ExecuteResponseCommands, SmartHomeV1ExecuteRequestCommands } from 'actions-on-google';
+import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
+import { Characteristic } from '../hap-types';
+import { hapBaseType, hapBaseType_t } from './hapBaseType';
 
-export class Television implements HapDevice {
+export class Television extends hapBaseType implements hapBaseType_t {
   sync(service: ServiceType) {
-    return {
-      id: service.uniqueId,
+    return this.createSyncData(service, {
       type: 'action.devices.types.TV',
       traits: [
         'action.devices.traits.OnOff',
       ],
-      name: {
-        defaultNames: [
-          service.serviceName,
-          service.accessoryInformation.Name,
-        ],
-        name: service.serviceName,
-        nicknames: [],
-      },
-      willReportState: true,
-      deviceInfo: {
-        manufacturer: service.accessoryInformation.Manufacturer,
-        model: service.accessoryInformation.Model,
-      },
-      customData: {
-        aid: service.aid,
-        iid: service.iid,
-        instanceUsername: service.instance.username,
-        instanceIpAddress: service.instance.ipAddress,
-        instancePort: service.instance.port,
-      },
-    };
+    });
   }
 
   query(service: ServiceType) {
     return {
-      on: service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active).value ? true : false,
+      on: !!service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active).value,
       online: true,
     };
   }
@@ -51,8 +29,7 @@ export class Television implements HapDevice {
         await service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active).setValue(command.execution[0].params.on ? 1 : 0);
         return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
-      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: 'unknown command ' + command.execution[0].command }; }
+      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` }; }
     }
   }
-
 }

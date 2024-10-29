@@ -1,44 +1,22 @@
-import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1SyncDevices, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
-import { Characteristic } from '../hap-types';
-import { AccessoryTypeExecuteResponse, HapDevice } from '../interfaces';
+import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { ServiceType } from '@homebridge/hap-client';
+import { Characteristic } from '../hap-types';
+import { hapBaseType, hapBaseType_t } from './hapBaseType';
 
-export class GarageDoorOpener implements HapDevice {
+export class GarageDoorOpener extends hapBaseType implements hapBaseType_t {
   public twoFactorRequired = true;
 
   sync(service: ServiceType): SmartHomeV1SyncDevices {
-    return {
-      id: service.uniqueId,
+
+    return this.createSyncData(service, {
       type: 'action.devices.types.GARAGE',
       traits: [
         'action.devices.traits.OpenClose',
       ],
-      name: {
-        defaultNames: [
-          service.serviceName,
-          service.accessoryInformation.Name,
-        ],
-        name: service.serviceName,
-        nicknames: [],
-      },
-      willReportState: true,
       attributes: {
         openDirection: ['UP', 'DOWN'],
       },
-      deviceInfo: {
-        manufacturer: service.accessoryInformation.Manufacturer,
-        model: service.accessoryInformation.Model,
-        hwVersion: service.accessoryInformation.HardwareRevision,
-        swVersion: service.accessoryInformation.SoftwareRevision,
-      },
-      customData: {
-        aid: service.aid,
-        iid: service.iid,
-        instanceUsername: service.instance.username,
-        instanceIpAddress: service.instance.ipAddress,
-        instancePort: service.instance.port,
-      },
-    };
+    });
   }
 
   query(service: ServiceType) {
@@ -67,7 +45,7 @@ export class GarageDoorOpener implements HapDevice {
         await service.serviceCharacteristics.find(x => x.uuid === Characteristic.TargetDoorState).setValue(command.execution[0].params.openPercent ? 0 : 1);
         return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
-      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: 'unknown command ' + command.execution[0].command }; }
+      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` }; }
     }
   }
 
@@ -86,5 +64,4 @@ export class GarageDoorOpener implements HapDevice {
 
     return false;
   }
-
 }

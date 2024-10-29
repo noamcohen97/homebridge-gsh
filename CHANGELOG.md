@@ -7,6 +7,7 @@ All notable changes to `homebridge-gsh` will be documented in this file. This pr
 ### Changes
 
 - Updated dependent software packages
+- Make homebridge 2.0 Ready
 
 ## v3.0.0 (2024-10-27)
 

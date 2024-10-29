@@ -1,48 +1,27 @@
-import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1SyncDevices, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
-import { Characteristic } from '../hap-types';
-import { AccessoryTypeExecuteResponse, HapDevice } from '../interfaces';
-import { Hap } from '../hap';
+import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { ServiceType } from '@homebridge/hap-client';
+import { Hap } from '../hap';
+import { Characteristic } from '../hap-types';
+import { hapBaseType, hapBaseType_t } from './hapBaseType';
 
-export class TemperatureSensor implements HapDevice {
+export class TemperatureSensor extends hapBaseType implements hapBaseType_t {
   constructor(
     private hap: Hap,
-  ) { }
+  ) {
+    super();
+  }
 
   sync(service: ServiceType): SmartHomeV1SyncDevices {
-    return {
-      id: service.uniqueId,
+    return this.createSyncData(service, {
       type: 'action.devices.types.SENSOR',
       traits: [
         'action.devices.traits.TemperatureControl',
       ],
-      name: {
-        defaultNames: [
-          service.serviceName,
-          service.accessoryInformation.Name,
-        ],
-        name: service.serviceName,
-        nicknames: [],
-      },
-      willReportState: true,
       attributes: {
         queryOnlyTemperatureControl: true,
         temperatureUnitForUX: this.hap.config.forceFahrenheit ? 'F' : 'C',
       },
-      deviceInfo: {
-        manufacturer: service.accessoryInformation.Manufacturer,
-        model: service.accessoryInformation.Model,
-        hwVersion: service.accessoryInformation.HardwareRevision,
-        swVersion: service.accessoryInformation.SoftwareRevision,
-      },
-      customData: {
-        aid: service.aid,
-        iid: service.iid,
-        instanceUsername: service.instance.username,
-        instanceIpAddress: service.instance.ipAddress,
-        instancePort: service.instance.port,
-      },
-    };
+    });
   }
 
   query(service: ServiceType) {
@@ -57,7 +36,6 @@ export class TemperatureSensor implements HapDevice {
     if (!command.execution.length) {
       return { ids: [service.uniqueId], status: 'ERROR', debugString: 'missing command' };
     }
-    return { ids: [service.uniqueId], status: 'ERROR', debugString: 'unknown command ' + command.execution[0].command };;
+    return { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` };
   }
-
 }

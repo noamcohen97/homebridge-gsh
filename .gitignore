@@ -8,3 +8,4 @@ test/hbConfig/.uix-secrets
 /test/hbConfig/backups
 /test/hbConfig/persist
 /test/hbConfig/accessories
+test/hbConfig/config.json

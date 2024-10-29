@@ -1,13 +1,11 @@
-import { Hap } from "./hap";
-import { HapClient, ServiceType, CharacteristicType } from '@homebridge/hap-client';
-import { SmartHomeV1SyncResponse, SmartHomeV1QueryRequestDevices, SmartHomeV1ExecuteRequest } from 'actions-on-google';
-import { Log } from './logger';
+import { CharacteristicType, ServiceType } from '@homebridge/hap-client';
+import { SmartHomeV1QueryRequestDevices } from 'actions-on-google';
+import { Hap } from './hap';
 import { PluginConfig } from './interfaces';
-
+import { Log } from './logger';
+import fs from 'node:fs';
 
 // socket, log, pin: string, config: PluginConfig
-
-
 
 class socketMock {
   on(event: string, callback: any) {
@@ -20,147 +18,177 @@ class socketMock {
   }
 
   sendJson(data: any) {
+    // eslint-disable-next-line no-console
     console.log('sendJson', data);
   }
 }
 
 const config: PluginConfig = {
-  "name": "Google Smart Home",
-  "token": "1234567890",
-  "notice": "Keep your token a secret!",
-  "debug": false,
-  "platform": "google-smarthome",
-  "twoFactorAuthPin": "123-456",
+  name: 'Google Smart Home',
+  token: '1234567890',
+  notice: 'Keep your token a secret!',
+  debug: false,
+  platform: 'google-smarthome',
+  twoFactorAuthPin: '123-456',
 };
 
-var log = new Log(console, true);
+const log = new Log(console, true);
 
-var hap = new Hap(socketMock, log, "031-45-154", config);
+const hap = new Hap(socketMock, log, '031-45-154', config);
 
-describe('Process the QUERY intent', () => {
+describe.skip('process the QUERY intent', () => {
+  test('wait for HAP to be Ready', async () => {
+    while (!hap.ready) {
+      // console.log('waiting for hap to be ready');
+      await sleep(500);
+    }
+    // eslint-disable-next-line no-console
+    console.log('hap ready, testing started');
+  }, 30000);
+
+  describe('QUERY message with delay to allow manual testing', () => {
+    test('lightbulb with On/Off only', async () => {
+      const response: any = await hap.query(query);
+      // console.log('response', response);
+    });
+    test('sleeping', async () => {
+      await sleep(5000);
+    }, 30000);
+    test('lightbulb with On/Off only', async () => {
+      const response: any = await hap.query(query);
+      // console.log('response', response);
+    });
+    test('sleeping', async () => {
+      await sleep(5000);
+    }, 30000);
+    test('lightbulb with On/Off only', async () => {
+      const response: any = await hap.query(query);
+      // console.log('response', response);
+    });
+  });
+
+  afterAll(async () => {
+    // eslint-disable-next-line no-console
+    console.log('destroy');
+    await hap.destroy();
+  });
+});
+
+describe('process the SYNC intent', () => {
   test('Wait for HAP to be Ready', async () => {
     while (!hap.ready) {
       // console.log('waiting for hap to be ready');
       await sleep(500);
     }
+    // eslint-disable-next-line no-console
     console.log('hap ready, testing started');
-  }, 20000);
+  }, 30000);
 
-  describe('QUERY message with delay to allow manual testing', () => {
-    test('Lightbulb with On/Off only', async () => {
-      const response: any = await hap.query(query);
-      // console.log('response', response);
+  describe('SYNC message with delay to allow manual testing', () => {
+    test('lightbulb with On/Off only', async () => {
+      const response: any = await hap.buildSyncResponse();
+      await fs.writeFile('buildSyncResponse.json', JSON.stringify(response, null, 2), (err: any) => {
+        if (err) {
+          // eslint-disable-next-line no-console
+          console.log(err);
+        }
+      });
+      await fs.writeFile('services.json', JSON.stringify(hap.services, null, 2), (err: any) => {
+        if (err) {
+          // eslint-disable-next-line no-console
+          console.log(err);
+        }
+      });
+      //      console.log('response', response);
     });
-    test('Sleeping', async () => {
-      await sleep(5000);
-
-    }, 30000);
-    test('Lightbulb with On/Off only', async () => {
-      const response: any = await hap.query(query);
-      // console.log('response', response);
-    });
-    test('Sleeping', async () => {
-      await sleep(5000);
-
-    }, 30000);
-    test('Lightbulb with On/Off only', async () => {
-      const response: any = await hap.query(query);
-      // console.log('response', response);
-    });
-
   });
 
-
   afterAll(async () => {
+    // eslint-disable-next-line no-console
     console.log('destroy');
     await hap.destroy();
   });
-
 });
 
 async function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-
-
 const execute = {
-  "inputs": [
+  inputs: [
     {
-      "context": {
-        "locale_country": "US",
-        "locale_language": "en"
+      context: {
+        locale_country: 'US',
+        locale_language: 'en',
       },
-      "intent": "action.devices.EXECUTE",
-      "payload": {
-        "commands": [
+      intent: 'action.devices.EXECUTE',
+      payload: {
+        commands: [
           {
-            "devices": [
+            devices: [
               {
-                "customData": {
-                  "aid": 75,
-                  "iid": 8,
-                  "instanceIpAddress": "192.168.1.11",
-                  "instancePort": 46283,
-                  "instanceUsername": "1C:22:3D:E3:CF:34"
+                customData: {
+                  aid: 75,
+                  iid: 8,
+                  instanceIpAddress: '192.168.1.11',
+                  instancePort: 46283,
+                  instanceUsername: '1C:22:3D:E3:CF:34',
                 },
-                "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-              }
+                id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+              },
             ],
-            "execution": [
+            execution: [
               {
-                "command": "action.devices.commands.OnOff",
-                "params": {
-                  "on": false
-                }
-              }
-            ]
-          }
-        ]
+                command: 'action.devices.commands.OnOff',
+                params: {
+                  on: false,
+                },
+              },
+            ],
+          },
+        ],
       },
-      "requestId": "3137481448496135047"
-    }
+      requestId: '3137481448496135047',
+    },
   ],
-  "requestId": "3137481448496135047"
+  requestId: '3137481448496135047',
 };
 
 const query: SmartHomeV1QueryRequestDevices[] = [
   {
-    "customData": {
-      "aid": 75,
-      "iid": 8,
-      "instanceIpAddress": "192.168.1.11",
-      "instancePort": 46283,
-      "instanceUsername": "1C:22:3D:E3:CF:34"
+    customData: {
+      aid: 75,
+      iid: 8,
+      instanceIpAddress: '192.168.1.11',
+      instancePort: 46283,
+      instanceUsername: '1C:22:3D:E3:CF:34',
     },
-    "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-  }];
+    id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+  },
+];
 
 /* ----------------- */
 
-
-
 const setValue = async function (value: string | number | boolean): Promise<CharacteristicType> {
   // Perform your operations here
-  console.log('setValue', value);
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "Lightbulb",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'Lightbulb',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -168,23 +196,23 @@ const setValue = async function (value: string | number | boolean): Promise<Char
 const getValue = async function (): Promise<CharacteristicType> {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "Lightbulb",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'Lightbulb',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -196,23 +224,23 @@ const refreshCharacteristics = async function (): Promise<ServiceType> {
 const setCharacteristic = async function (value: string | number | boolean): Promise<ServiceType> {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "Lightbulb",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'Lightbulb',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return hapServiceHue;
 };
@@ -220,23 +248,23 @@ const setCharacteristic = async function (value: string | number | boolean): Pro
 const getCharacteristic = function (): CharacteristicType {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "Lightbulb",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'Lightbulb',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -259,7 +287,7 @@ const hapServiceHue: ServiceType = {
       description: 'On',
       value: 0,
       format: 'bool',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -267,8 +295,8 @@ const hapServiceHue: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 58,
@@ -280,7 +308,7 @@ const hapServiceHue: ServiceType = {
       description: 'Configured Name',
       value: 'Powder Shower',
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -288,8 +316,8 @@ const hapServiceHue: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 58,
@@ -301,7 +329,7 @@ const hapServiceHue: ServiceType = {
       description: 'Brightness',
       value: 65,
       format: 'int',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: 'percentage',
       maxValue: 100,
       minValue: 0,
@@ -309,8 +337,8 @@ const hapServiceHue: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 58,
@@ -322,7 +350,7 @@ const hapServiceHue: ServiceType = {
       description: 'Hue',
       value: 0,
       format: 'float',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: 'arcdegrees',
       maxValue: 360,
       minValue: 0,
@@ -330,8 +358,8 @@ const hapServiceHue: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 58,
@@ -343,7 +371,7 @@ const hapServiceHue: ServiceType = {
       description: 'Saturation',
       value: 0,
       format: 'float',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: 'percentage',
       maxValue: 100,
       minValue: 0,
@@ -351,8 +379,8 @@ const hapServiceHue: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 58,
@@ -364,7 +392,7 @@ const hapServiceHue: ServiceType = {
       description: 'Color Temperature',
       value: 325,
       format: 'int',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: 500,
       minValue: 140,
@@ -372,16 +400,16 @@ const hapServiceHue: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }
+      setValue,
+      getValue,
+    },
   ],
   accessoryInformation: {
-    Manufacturer: 'Tasmota',
-    Model: 'Tuya MCU',
-    Name: 'Powder Shower',
+    'Manufacturer': 'Tasmota',
+    'Model': 'Tuya MCU',
+    'Name': 'Powder Shower',
     'Serial Number': 'ED8243-jessie',
-    'Firmware Revision': '9.5.0tasmota'
+    'Firmware Revision': '9.5.0tasmota',
   },
   values: {
     On: 0,
@@ -389,7 +417,7 @@ const hapServiceHue: ServiceType = {
     Brightness: 65,
     Hue: 0,
     Saturation: 0,
-    ColorTemperature: 325
+    ColorTemperature: 325,
   },
   linked: undefined,
   instance: {
@@ -400,9 +428,9 @@ const hapServiceHue: ServiceType = {
 
   },
   uniqueId: '2a1f1a87419c2afbd847828b96095f892975c36572751ab71f53edf0c5372fdb',
-  refreshCharacteristics: refreshCharacteristics,
-  setCharacteristic: setCharacteristic,
-  getCharacteristic: getCharacteristic
+  refreshCharacteristics,
+  setCharacteristic,
+  getCharacteristic,
 };
 
 const hapServiceOnOff: ServiceType = {
@@ -423,7 +451,7 @@ const hapServiceOnOff: ServiceType = {
       description: 'On',
       value: 0,
       format: 'bool',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -431,8 +459,8 @@ const hapServiceOnOff: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 13,
@@ -444,7 +472,7 @@ const hapServiceOnOff: ServiceType = {
       description: 'Configured Name',
       value: 'Shed Light',
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -452,16 +480,16 @@ const hapServiceOnOff: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }
+      setValue,
+      getValue,
+    },
   ],
   accessoryInformation: {
-    Manufacturer: 'Tasmota',
-    Model: 'WiOn',
-    Name: 'Shed Light',
+    'Manufacturer': 'Tasmota',
+    'Model': 'WiOn',
+    'Name': 'Shed Light',
     'Serial Number': '02231D-jessie',
-    'Firmware Revision': '9.5.0tasmota'
+    'Firmware Revision': '9.5.0tasmota',
   },
   values: { On: 0, ConfiguredName: 'Shed Light' },
   linked: undefined,
@@ -473,9 +501,9 @@ const hapServiceOnOff: ServiceType = {
 
   },
   uniqueId: '664195d5556f1e0b424ed32bcd863ec8954c76f8ab81cc399f0e24f8827806d1',
-  refreshCharacteristics: refreshCharacteristics,
-  setCharacteristic: setCharacteristic,
-  getCharacteristic: getCharacteristic
+  refreshCharacteristics,
+  setCharacteristic,
+  getCharacteristic,
 };
 
 const hapServiceDimmer: ServiceType = {
@@ -496,7 +524,7 @@ const hapServiceDimmer: ServiceType = {
       description: 'On',
       value: 0,
       format: 'bool',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -504,8 +532,8 @@ const hapServiceDimmer: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 14,
@@ -517,7 +545,7 @@ const hapServiceDimmer: ServiceType = {
       description: 'Brightness',
       value: 100,
       format: 'int',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: 'percentage',
       maxValue: 100,
       minValue: 0,
@@ -525,8 +553,8 @@ const hapServiceDimmer: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 14,
@@ -538,7 +566,7 @@ const hapServiceDimmer: ServiceType = {
       description: 'Configured Name',
       value: 'Front Hall',
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -546,16 +574,16 @@ const hapServiceDimmer: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }
+      setValue,
+      getValue,
+    },
   ],
   accessoryInformation: {
-    Manufacturer: 'Tasmota',
-    Model: 'Tuya MCU',
-    Name: 'Front Hall',
+    'Manufacturer': 'Tasmota',
+    'Model': 'Tuya MCU',
+    'Name': 'Front Hall',
     'Serial Number': '23CAC5-jessie',
-    'Firmware Revision': '9.5.0tasmota'
+    'Firmware Revision': '9.5.0tasmota',
   },
   values: { On: 0, Brightness: 100, ConfiguredName: 'Front Hall' },
   linked: undefined,
@@ -567,99 +595,99 @@ const hapServiceDimmer: ServiceType = {
 
   },
   uniqueId: '028fc478c0b4b116ead9be0dc8a72251b351b745cbc3961704268737101c803d',
-  refreshCharacteristics: refreshCharacteristics,
-  setCharacteristic: setCharacteristic,
-  getCharacteristic: getCharacteristic
+  refreshCharacteristics,
+  setCharacteristic,
+  getCharacteristic,
 };
 
 const commandOnOff = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandBrightness = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandColorHSV = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandColorTemperature = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };

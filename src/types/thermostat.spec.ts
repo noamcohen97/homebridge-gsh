@@ -1,12 +1,11 @@
-import { Thermostat } from "./thermostat";
-import { HapClient, ServiceType, CharacteristicType } from '@homebridge/hap-client';
-import { SmartHomeV1SyncResponse, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
-import { AccessoryTypeExecuteResponse, PluginConfig } from '../interfaces';
+import { CharacteristicType, ServiceType } from '@homebridge/hap-client';
+import { Hap } from '../hap';
 import { Characteristic } from '../hap-types';
+import { PluginConfig } from '../interfaces';
 
 import { Log } from '../logger';
 
-import { Hap } from "../hap";
+import { Thermostat } from './thermostat';
 
 class socketMock {
   on(event: string, callback: any) {
@@ -19,28 +18,29 @@ class socketMock {
   }
 
   sendJson(data: any) {
+    // eslint-disable-next-line no-console
     console.log('sendJson', data);
   }
 }
 
 const config: PluginConfig = {
-  "name": "Google Smart Home",
-  "token": "1234567890",
-  "notice": "Keep your token a secret!",
-  "debug": false,
-  "platform": "google-smarthome",
-  "twoFactorAuthPin": "123-456",
+  name: 'Google Smart Home',
+  token: '1234567890',
+  notice: 'Keep your token a secret!',
+  debug: false,
+  platform: 'google-smarthome',
+  twoFactorAuthPin: '123-456',
 };
 
-var log = new Log(console, true);
+const log = new Log(console, true);
 
-var hap = new Hap(socketMock, log, "031-45-154", config);
+const hap = new Hap(socketMock, log, '031-45-154', config);
 
-var thermostat = new Thermostat(hap);
+const thermostat = new Thermostat(hap);
 
-describe('Thermostat', () => {
+describe('thermostat', () => {
   describe('sync message', () => {
-    test('Thermostat heat and cool', async () => {
+    it('thermostat heat and cool', async () => {
       const response: any = thermostat.sync(thermostatTemp);
       expect(response).toBeDefined();
       expect(response.type).toBe('action.devices.types.THERMOSTAT');
@@ -58,7 +58,7 @@ describe('Thermostat', () => {
       // await sleep(10000)
     });
 
-    test('Thermostat cool only', async () => {
+    it('thermostat cool only', async () => {
       const response: any = thermostat.sync(thermostatNoHeat);
       expect(response).toBeDefined();
       expect(response.type).toBe('action.devices.types.THERMOSTAT');
@@ -77,9 +77,9 @@ describe('Thermostat', () => {
     });
   });
   describe('query message', () => {
-    test('Thermostat heat and cool', async () => {
+    it('thermostat heat and cool', async () => {
       const response = thermostat.query(thermostatTemp);
-      console.log('response', response);
+
       expect(response).toBeDefined();
       expect(response.online).toBeDefined();
       expect(response.thermostatMode).toBeDefined();
@@ -88,9 +88,9 @@ describe('Thermostat', () => {
       // await sleep(10000)
     });
 
-    test('Thermostat cool only', async () => {
+    it('thermostat cool only', async () => {
       const response = thermostat.query(thermostatNoHeat);
-      console.log('response', response);
+
       expect(response).toBeDefined();
       expect(response.online).toBeDefined();
       expect(response.thermostatMode).toBeDefined();
@@ -100,8 +100,7 @@ describe('Thermostat', () => {
   });
 
   describe('execute message', () => {
-
-    test('Thermostat - setMode', async () => {
+    it('thermostat - setMode', async () => {
       const response = await thermostat.execute(thermostatTemp, commandThermostatSetModeOff);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
@@ -109,7 +108,7 @@ describe('Thermostat', () => {
       // await sleep(10000)
     });
 
-    test('Thermostat - setTemp', async () => {
+    it('thermostat - setTemp', async () => {
       const response = await thermostat.execute(thermostatTemp, commandThermostatTemperatureSetpoint);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
@@ -117,7 +116,7 @@ describe('Thermostat', () => {
       // await sleep(10000)
     });
 
-    test('Thermostat - setRange', async () => {
+    it('thermostat - setRange', async () => {
       const response = await thermostat.execute(thermostatTemp, commandThermostatTemperatureSetRange);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
@@ -125,30 +124,27 @@ describe('Thermostat', () => {
       // await sleep(10000)
     });
 
-
-    test('Thermostat  - commandMalformed', async () => {
+    it('thermostat  - commandMalformed', async () => {
       const response = await thermostat.execute(thermostatTemp, commandMalformed);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('ERROR');
     });
 
-    test('Thermostat  - commandIncorrectCommand', async () => {
+    it('thermostat  - commandIncorrectCommand', async () => {
       const response = await thermostat.execute(thermostatTemp, commandIncorrectCommand);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('ERROR');
     });
 
-
-    test('Thermostat  - Error', async () => {
+    it('thermostat  - Error', async () => {
       expect.assertions(1);
       thermostatTemp.serviceCharacteristics[0].setValue = setValueError;
       // const response = thermostat.execute(thermostatTemp, commandThermostatSetModeOff);
       expect(thermostat.execute(thermostatTemp, commandThermostatSetModeOff)).rejects.toThrow('Error setting value');
       // await sleep(10000)
     });
-
   });
   afterAll(async () => {
     await hap.destroy();
@@ -162,23 +158,23 @@ async function sleep(ms: number) {
 const setValue = async function (value: string | number | boolean): Promise<CharacteristicType> {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "Thermostat",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'Thermostat',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -187,23 +183,23 @@ const setValueError = async function (value: string | number | boolean): Promise
   // Perform your operations here
   throw new Error('Error setting value');
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "Lightbulb",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'Lightbulb',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -211,23 +207,23 @@ const setValueError = async function (value: string | number | boolean): Promise
 const getValue = async function (): Promise<CharacteristicType> {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "Thermostat",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'Thermostat',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -239,23 +235,23 @@ const refreshCharacteristics = async function (): Promise<ServiceType> {
 const setCharacteristic = async function (value: string | number | boolean): Promise<ServiceType> {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "Thermostat",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'Thermostat',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return thermostatTemp;
 };
@@ -263,23 +259,23 @@ const setCharacteristic = async function (value: string | number | boolean): Pro
 const getCharacteristic = function (): CharacteristicType {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "Thermostat",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'Thermostat',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -295,14 +291,14 @@ const thermostatTemp: ServiceType = {
     {
       aid: 13,
       iid: 11,
-      uuid: '000000B0-0000-1000-8000-0026BB765291',
-      type: 'ConfiguredName',
+      uuid: Characteristic.TargetHeaterCoolerState,
+      type: 'TargetHeaterCoolerState',
       serviceType: 'Active',
       serviceName: 'Shed Light',
       description: 'Configured Name',
       value: 1,
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -310,8 +306,29 @@ const thermostatTemp: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
+    },
+    {
+      aid: 13,
+      iid: 11,
+      uuid: '000000B0-0000-1000-8000-0026BB765291',
+      type: 'ConfiguredName',
+      serviceType: 'Active',
+      serviceName: 'Shed Light',
+      description: 'Configured Name',
+      value: 1,
+      format: 'string',
+      perms: ['ev', 'pr', 'pw'],
+      unit: undefined,
+      maxValue: undefined,
+      minValue: undefined,
+      minStep: undefined,
+      canRead: true,
+      canWrite: true,
+      ev: true,
+      setValue,
+      getValue,
     },
     {
       aid: 13,
@@ -323,7 +340,7 @@ const thermostatTemp: ServiceType = {
       description: 'On',
       value: 25,
       format: 'bool',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -331,8 +348,8 @@ const thermostatTemp: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 13,
@@ -344,7 +361,7 @@ const thermostatTemp: ServiceType = {
       description: 'On',
       value: 25,
       format: 'bool',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -352,8 +369,8 @@ const thermostatTemp: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 13,
@@ -365,7 +382,7 @@ const thermostatTemp: ServiceType = {
       description: 'Configured Name',
       value: 19,
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -373,8 +390,8 @@ const thermostatTemp: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 13,
@@ -386,7 +403,7 @@ const thermostatTemp: ServiceType = {
       description: 'Configured Name',
       value: 1,
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -394,8 +411,8 @@ const thermostatTemp: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 13,
@@ -407,7 +424,7 @@ const thermostatTemp: ServiceType = {
       description: 'Configured Name',
       value: 1,
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -415,8 +432,8 @@ const thermostatTemp: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 13,
@@ -428,7 +445,7 @@ const thermostatTemp: ServiceType = {
       description: 'Configured Name',
       value: 1,
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -436,8 +453,8 @@ const thermostatTemp: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 13,
@@ -449,7 +466,7 @@ const thermostatTemp: ServiceType = {
       description: 'Configured Name',
       value: 1,
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -457,17 +474,17 @@ const thermostatTemp: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }
+      setValue,
+      getValue,
+    },
 
   ],
   accessoryInformation: {
-    Manufacturer: 'Tasmota',
-    Model: 'WiOn',
-    Name: 'Shed Light',
+    'Manufacturer': 'Tasmota',
+    'Model': 'WiOn',
+    'Name': 'Shed Light',
     'Serial Number': '02231D-jessie',
-    'Firmware Revision': '9.5.0tasmota'
+    'Firmware Revision': '9.5.0tasmota',
   },
   values: { On: 0, ConfiguredName: 'Shed Light' },
   linked: undefined,
@@ -479,9 +496,9 @@ const thermostatTemp: ServiceType = {
 
   },
   uniqueId: '664195d5556f1e0b424ed32bcd863ec8954c76f8ab81cc399f0e24f8827806d1',
-  refreshCharacteristics: refreshCharacteristics,
-  setCharacteristic: setCharacteristic,
-  getCharacteristic: getCharacteristic
+  refreshCharacteristics,
+  setCharacteristic,
+  getCharacteristic,
 };
 
 const thermostatNoHeat: ServiceType = {
@@ -502,7 +519,7 @@ const thermostatNoHeat: ServiceType = {
       description: 'On',
       value: 25,
       format: 'bool',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -510,8 +527,8 @@ const thermostatNoHeat: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 13,
@@ -523,7 +540,7 @@ const thermostatNoHeat: ServiceType = {
       description: 'Configured Name',
       value: 1,
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -531,8 +548,8 @@ const thermostatNoHeat: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 13,
@@ -544,7 +561,7 @@ const thermostatNoHeat: ServiceType = {
       description: 'Configured Name',
       value: 2,
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -552,8 +569,8 @@ const thermostatNoHeat: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 13,
@@ -565,7 +582,7 @@ const thermostatNoHeat: ServiceType = {
       description: 'Configured Name',
       value: 1,
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -573,10 +590,9 @@ const thermostatNoHeat: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }
-    ,
+      setValue,
+      getValue,
+    },
     {
       aid: 13,
       iid: 11,
@@ -587,7 +603,7 @@ const thermostatNoHeat: ServiceType = {
       description: 'Configured Name',
       value: 1,
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -595,8 +611,8 @@ const thermostatNoHeat: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 13,
@@ -608,7 +624,7 @@ const thermostatNoHeat: ServiceType = {
       description: 'Configured Name',
       value: 1,
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -616,9 +632,10 @@ const thermostatNoHeat: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }, {
+      setValue,
+      getValue,
+    },
+    {
       aid: 13,
       iid: 11,
       uuid: Characteristic.TargetTemperature,
@@ -628,7 +645,7 @@ const thermostatNoHeat: ServiceType = {
       description: 'Configured Name',
       value: 1,
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -636,16 +653,16 @@ const thermostatNoHeat: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }
+      setValue,
+      getValue,
+    },
   ],
   accessoryInformation: {
-    Manufacturer: 'Tasmota',
-    Model: 'WiOn',
-    Name: 'Shed Light',
+    'Manufacturer': 'Tasmota',
+    'Model': 'WiOn',
+    'Name': 'Shed Light',
     'Serial Number': '02231D-jessie',
-    'Firmware Revision': '9.5.0tasmota'
+    'Firmware Revision': '9.5.0tasmota',
   },
   values: { On: 0, ConfiguredName: 'Shed Light' },
   linked: undefined,
@@ -657,209 +674,208 @@ const thermostatNoHeat: ServiceType = {
 
   },
   uniqueId: '664195d5556f1e0b424ed32bcd863ec8954c76f8ab81cc399f0e24f8827806d1',
-  refreshCharacteristics: refreshCharacteristics,
-  setCharacteristic: setCharacteristic,
-  getCharacteristic: getCharacteristic
+  refreshCharacteristics,
+  setCharacteristic,
+  getCharacteristic,
 };
 
-
 const commandOnOff = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandMalformed = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
-  ]
+  execution: [
+  ],
 };
 
 const commandIncorrectCommand = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.notACommand",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.notACommand',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandBrightness = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandColorHSV = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandColorTemperature = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandThermostatSetModeOff = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.ThermostatSetMode",
-      "params": {
-        "thermostatMode": "off"
-      }
-    }
-  ]
+      command: 'action.devices.commands.ThermostatSetMode',
+      params: {
+        thermostatMode: 'off',
+      },
+    },
+  ],
 };
 
 const commandThermostatTemperatureSetpoint = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.ThermostatSetMode",
-      "params": {
-        "thermostatMode": "off"
-      }
-    }
-  ]
+      command: 'action.devices.commands.ThermostatSetMode',
+      params: {
+        thermostatMode: 'off',
+      },
+    },
+  ],
 };
 
 const commandThermostatTemperatureSetRange = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.ThermostatSetMode",
-      "params": {
-        "thermostatMode": "off"
-      }
-    }
-  ]
+      command: 'action.devices.commands.ThermostatSetMode',
+      params: {
+        thermostatMode: 'off',
+      },
+    },
+  ],
 };

@@ -1,15 +1,13 @@
 import { HapClient, ServiceType } from '@homebridge/hap-client';
-import { ServicesTypes, Service, Characteristic } from './hap-types';
-import { SmartHomeV1ExecuteResponseCommands, SmartHomeV1ExecuteRequestPayload, SmartHomeV1ExecuteRequestCommands } from 'actions-on-google';
-import * as crypto from 'crypto';
+import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { Subject } from 'rxjs';
 import { debounceTime, map } from 'rxjs/operators';
+import { Characteristic } from './hap-types';
 
-import { PluginConfig, HapInstance, Instance } from './interfaces';
-import { toLongFormUUID } from './uuid';
+import { PluginConfig } from './interfaces';
 import { Log } from './logger';
-
 import { Door } from './types/door';
+
 import { Fan } from './types/fan';
 import { Fanv2 } from './types/fan-v2';
 import { GarageDoorOpener } from './types/garage-door-opener';
@@ -34,7 +32,7 @@ export class Hap {
   services: ServiceType[] = [];
   private startTimeout: NodeJS.Timeout;
   private discoveryTimeout: NodeJS.Timeout;
-  private syncTimeout: NodeJS.Timeout
+  private syncTimeout: NodeJS.Timeout;
 
   public ready: boolean;
 
@@ -105,7 +103,7 @@ export class Hap {
     this.log.debug('Waiting 15 seconds before starting instance discovery...');
     this.startTimeout = setTimeout(() => {
       this.discover();
-    }, 1000);
+    }, 15000);
 
     this.reportStateSubject
       .pipe(
@@ -135,27 +133,28 @@ export class Hap {
     });
 
     this.waitForNoMoreDiscoveries();
-    this.hapClient.on('instance-discovered', this.waitForNoMoreDiscoveries)
+    this.hapClient.on('instance-discovered', this.waitForNoMoreDiscoveries);
 
-    this.hapClient.on('hapEvent', ((event) => {
+    this.hapClient.on('hapEvent', (event) => {
       this.handleHapEvent(event);
-    }));
+    });
   }
 
   waitForNoMoreDiscoveries = () => {
     // Clear any existing timeout
-    if (this.discoveryTimeout) clearTimeout(this.discoveryTimeout);
+    if (this.discoveryTimeout) {
+      clearTimeout(this.discoveryTimeout);
+    }
 
     // Set up the timeout
     this.discoveryTimeout = setTimeout(() => {
       this.log.debug('No more instances discovered, publishing services');
       this.hapClient.removeListener('instance-discovered', this.waitForNoMoreDiscoveries);
       this.start();
-      this.syncTimeout = setTimeout(() => {
-        this.requestSync();
-      }, 15000);
+      this.requestSync();
+      this.hapClient.on('instance-discovered', this.requestSync);  // Request sync on new instance discovery
     }, 5000);
-  }
+  };
 
   /**
    * Start processing
@@ -171,7 +170,7 @@ export class Hap {
   /**
    * Build Google SYNC intent payload
    */
-  async buildSyncResponse() {
+  async buildSyncResponse(): Promise<SmartHomeV1SyncDevices[]> {
     const devices = this.services.map((service) => {
       if (!this.types[service.type]) {
         // this.log.debug(`Unsupported service type ${service.type}`);
@@ -187,10 +186,15 @@ export class Hap {
    * Ask google to send a sync request
    */
   async requestSync() {
-    this.log.info('Sending Sync Request');
-    this.socket.sendJson({
-      type: 'request-sync',
-    });
+    if (this.syncTimeout) {
+      clearTimeout(this.syncTimeout);
+    }
+    this.syncTimeout = setTimeout(() => {
+      this.log.info('Sending Sync Request');
+      this.socket.sendJson({
+        type: 'request-sync',
+      });
+    }, 15000);
   }
 
   /**
@@ -223,16 +227,14 @@ export class Hap {
 
     for (const command of commands) {
       for (const device of command.devices) {
-
         const service = this.services.find(x => x.uniqueId === device.id);
-
+        this.log.debug(`Processing command ${command.execution[0].command} for ${device.id} and ${service}`);
         if (service) {
-
           // check if two factor auth is required, and if we have it
-          if (this.config.twoFactorAuthPin && this.types[service.type].twoFactorRequired &&
-            this.types[service.type].is2faRequired(command) &&
-            !(command.execution.length && command.execution[0].challenge &&
-              command.execution[0].challenge.pin === this.config.twoFactorAuthPin.toString()
+          if (this.config.twoFactorAuthPin && this.types[service.type].twoFactorRequired
+            && this.types[service.type].is2faRequired(command)
+            && !(command.execution.length && command.execution[0].challenge
+              && command.execution[0].challenge.pin === this.config.twoFactorAuthPin.toString()
             )
           ) {
             this.log.info('Requesting Two Factor Authentication Pin');
@@ -248,7 +250,6 @@ export class Hap {
             // process the request
             try {
               response.push(await this.types[service.type].execute(service, command));
-
             } catch (error) {
               this.log.error(`Error executing command: ${error.message}`);
               response.push({
@@ -257,9 +258,14 @@ export class Hap {
                 debugString: error.message,
               });
             }
-
           }
-
+        } else {
+          this.log.error(`Device not found: ${device.id}`);
+          response.push({
+            ids: [device.id],
+            status: 'OFFLINE',
+            errorCode: 'deviceNotFound',
+          });
         }
       }
     }
@@ -282,15 +288,15 @@ export class Hap {
       services = services.filter(x => this.types[x.type] !== undefined);
       services = services.filter(x => !this.accessoryFilter.includes(x.serviceName));
       services = services.filter(x => !this.accessorySerialFilter.includes(x.accessoryInformation['Serial Number']));
-      return services
+      return services;
     }).catch((e) => {
       if (e.response?.status === 401) {
-        this.log.warn('Homebridge must be running in insecure mode to view and control accessories from this plugin.')
+        this.log.warn('Homebridge must be running in insecure mode to view and control accessories from this plugin.');
       } else {
-        this.log.error(`Failed load accessories from Homebridge: ${e.message}`)
+        this.log.error(`Failed load accessories from Homebridge: ${e.message}`);
       }
-      return []
-    })
+      return [];
+    });
   }
 
   /**
@@ -302,7 +308,7 @@ export class Hap {
       const index = this.services.findIndex(item => item.uniqueId === event.uniqueId);
       if (index === -1) {
         this.log.debug(`[handleHapEvent] Service not found in services list ${event}`);
-        return
+        return;
       } else {
         this.services[index] = event;
         this.reportStateSubject.next(event.uniqueId);
@@ -357,16 +363,21 @@ export class Hap {
     this.socket.sendJson(payload);
   }
 
-
   /**
    * Close the HAP connection, used for testing
    */
   public async destroy() {
-    if (this.startTimeout) clearTimeout(this.startTimeout);
-    if (this.discoveryTimeout) clearTimeout(this.discoveryTimeout);
-    if (this.syncTimeout) clearTimeout(this.syncTimeout);
+    if (this.startTimeout) {
+      clearTimeout(this.startTimeout);
+    }
+    if (this.discoveryTimeout) {
+      clearTimeout(this.discoveryTimeout);
+    }
+    if (this.syncTimeout) {
+      clearTimeout(this.syncTimeout);
+    }
     if (this.hapClient) {
-      //await this.hapClient.destroy();
+      // await this.hapClient.destroy();
     }
   }
 }

@@ -1,12 +1,12 @@
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
+import * as path from 'node:path';
+import * as querystring from 'node:querystring';
 import { WebSocket } from '@homebridge/ws-connect';
-import * as querystring from 'querystring';
 import * as fs from 'fs-extra';
-import * as path from 'path';
 
+import { Hap } from './hap';
 import { PluginConfig } from './interfaces';
 import { Log } from './logger';
-import { Hap } from './hap';
 
 export class Plugin {
   public log: Log;

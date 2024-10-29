@@ -1,16 +1,59 @@
-import { HumiditySensor } from "./humidity-sensor";
-import { HapClient, ServiceType, CharacteristicType } from '@homebridge/hap-client';
-import { SmartHomeV1SyncResponse, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
-import { AccessoryTypeExecuteResponse, PluginConfig } from '../interfaces';
-import { Log } from '../logger';
+import { CharacteristicType, ServiceType } from '@homebridge/hap-client';
+import { HumiditySensor } from './humidity-sensor';
 
-var humiditySensor = new HumiditySensor();
+const humiditySensor = new HumiditySensor();
 
-describe('HumiditySensor', () => {
+describe('humiditySensor', () => {
   describe('sync message', () => {
-    test('HumiditySensor ', async () => {
+    it('humiditySensor ', async () => {
       const response: any = humiditySensor.sync(humiditySensorTemp);
       expect(response).toBeDefined();
+      expect(response.name).toBeDefined();
+      expect(response.name.defaultNames).toBeDefined();
+      expect(response.name.defaultNames).toHaveLength(2);
+      expect(response.name.name).toBeDefined();
+      expect(response.name.name).not.toBe('');
+      expect(response.name.name).toBe('Backyard');
+      expect(response.name.nicknames).toBeDefined();  //
+      expect(response.type).toBe('action.devices.types.SENSOR');
+      expect(response.traits).toContain('action.devices.traits.HumiditySetting');
+      expect(response.traits).not.toContain('action.devices.traits.Brightness');
+      expect(response.traits).not.toContain('action.devices.traits.ColorSetting');
+      expect(response.attributes).toBeDefined();
+      expect(response.attributes.queryOnlyHumiditySetting).toBeDefined();
+      // await sleep(10000)
+    });
+    it('humiditySensor - No Service Name', async () => {
+      humiditySensorTemp.serviceName = '';
+      const response: any = humiditySensor.sync(humiditySensorTemp);
+      expect(response).toBeDefined();
+      expect(response).toBeDefined();
+      expect(response.name).toBeDefined();
+      expect(response.name.defaultNames).toBeDefined();
+      expect(response.name.defaultNames).toHaveLength(1);
+      expect(response.name.name).toBeDefined();
+      expect(response.name.name).not.toBe('');
+      expect(response.name.name).toBe('Backyard');
+      expect(response.name.nicknames).toBeDefined();  //
+      expect(response.type).toBe('action.devices.types.SENSOR');
+      expect(response.traits).toContain('action.devices.traits.HumiditySetting');
+      expect(response.traits).not.toContain('action.devices.traits.Brightness');
+      expect(response.traits).not.toContain('action.devices.traits.ColorSetting');
+      expect(response.attributes).toBeDefined();
+      expect(response.attributes.queryOnlyHumiditySetting).toBeDefined();
+      // await sleep(10000)
+    });
+    it('humiditySensor - No service or Accessory Name', async () => {
+      humiditySensorTemp.accessoryInformation.Name = '';
+      const response: any = humiditySensor.sync(humiditySensorTemp);
+      expect(response).toBeDefined();
+      expect(response.name).toBeDefined();
+      expect(response.name.defaultNames).toBeDefined();
+      expect(response.name.defaultNames).toHaveLength(0);
+      expect(response.name.name).toBeDefined();
+      expect(response.name.name).not.toBe('');
+      expect(response.name.name).toBe('Missing Name');
+      expect(response.name.nicknames).toBeDefined();  //
       expect(response.type).toBe('action.devices.types.SENSOR');
       expect(response.traits).toContain('action.devices.traits.HumiditySetting');
       expect(response.traits).not.toContain('action.devices.traits.Brightness');
@@ -21,7 +64,7 @@ describe('HumiditySensor', () => {
     });
   });
   describe('query message', () => {
-    test('HumiditySensor ', async () => {
+    it('humiditySensor ', async () => {
       const response = humiditySensor.query(humiditySensorTemp);
       expect(response).toBeDefined();
       expect(response.humidityAmbientPercent).toBeDefined();
@@ -31,7 +74,7 @@ describe('HumiditySensor', () => {
   });
 
   describe('execute message', () => {
-    test('HumiditySensor ', async () => {
+    it('humiditySensor ', async () => {
       const response = await humiditySensor.execute(humiditySensorTemp, commandOnOff);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
@@ -39,15 +82,14 @@ describe('HumiditySensor', () => {
       // await sleep(10000)
     });
 
-
-    test('HumiditySensor  - commandMalformed', async () => {
+    it('humiditySensor  - commandMalformed', async () => {
       const response = await humiditySensor.execute(humiditySensorTemp, commandMalformed);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('ERROR');
     });
 
-    test('HumiditySensor  - commandIncorrectCommand', async () => {
+    it('humiditySensor  - commandIncorrectCommand', async () => {
       const response = await humiditySensor.execute(humiditySensorTemp, commandIncorrectCommand);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
@@ -72,23 +114,23 @@ async function sleep(ms: number) {
 const setValue = async function (value: string | number | boolean): Promise<CharacteristicType> {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "HumiditySensor",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'HumiditySensor',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -97,23 +139,23 @@ const setValueError = async function (value: string | number | boolean): Promise
   // Perform your operations here
   throw new Error('Error setting value');
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "Lightbulb",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'Lightbulb',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -121,23 +163,23 @@ const setValueError = async function (value: string | number | boolean): Promise
 const getValue = async function (): Promise<CharacteristicType> {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "HumiditySensor",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'HumiditySensor',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -149,23 +191,23 @@ const refreshCharacteristics = async function (): Promise<ServiceType> {
 const setCharacteristic = async function (value: string | number | boolean): Promise<ServiceType> {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "HumiditySensor",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'HumiditySensor',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return humiditySensorTemp;
 };
@@ -173,100 +215,78 @@ const setCharacteristic = async function (value: string | number | boolean): Pro
 const getCharacteristic = function (): CharacteristicType {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "HumiditySensor",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'HumiditySensor',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
 
 const humiditySensorTemp: ServiceType = {
-  aid: 13,
-  iid: 8,
-  uuid: '00000043-0000-1000-8000-0026BB765291',
-  type: 'HumiditySensor',
-  humanType: 'HumiditySensor',
-  serviceName: 'Shed Light',
-  serviceCharacteristics: [
+  'aid': 23,
+  'iid': 13,
+  'uuid': '00000082-0000-1000-8000-0026BB765291',
+  'type': 'HumiditySensor',
+  'humanType': 'Humidity Sensor',
+  'serviceName': 'Backyard',
+  'serviceCharacteristics': [
     {
-      aid: 13,
-      iid: 10,
-      uuid: '00000010-0000-1000-8000-0026BB765291',
-      type: 'On',
-      serviceType: 'CurrentRelativeHumidity',
-      serviceName: 'Shed Light',
-      description: 'On',
-      value: 25,
-      format: 'bool',
-      perms: ["ev", "pr", "pw"],
-      unit: undefined,
-      maxValue: undefined,
-      minValue: undefined,
-      minStep: undefined,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
+      'aid': 23,
+      'iid': 15,
+      'uuid': '00000010-0000-1000-8000-0026BB765291',
+      'type': 'CurrentRelativeHumidity',
+      'serviceType': 'HumiditySensor',
+      'serviceName': '',
+      'description': 'Current Relative Humidity',
+      'value': 0,
+      'format': 'float',
+      'perms': [
+        'ev',
+        'pr',
+      ],
+      'unit': 'percentage',
+      'maxValue': 100,
+      'minValue': 0,
+      'minStep': 1,
+      'canRead': true,
+      'canWrite': false,
+      'ev': true,
     },
-    {
-      aid: 13,
-      iid: 11,
-      uuid: '000000E3-0000-1000-8000-0026BB765291',
-      type: 'ConfiguredName',
-      serviceType: 'HumiditySensor',
-      serviceName: 'Shed Light',
-      description: 'Configured Name',
-      value: 'Shed Light',
-      format: 'string',
-      perms: ["ev", "pr", "pw"],
-      unit: undefined,
-      maxValue: undefined,
-      minValue: undefined,
-      minStep: undefined,
-      canRead: true,
-      canWrite: true,
-      ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }
   ],
-  accessoryInformation: {
-    Manufacturer: 'Tasmota',
-    Model: 'WiOn',
-    Name: 'Shed Light',
-    'Serial Number': '02231D-jessie',
-    'Firmware Revision': '9.5.0tasmota'
+  'accessoryInformation': {
+    'Manufacturer': 'NRCHKB',
+    'Model': '1.4.3',
+    'Name': 'Backyard',
+    'Serial Number': 'Default Serial Number',
+    'Firmware Revision': '1.4.3',
+    'Hardware Revision': '1.4.3',
+    'Software Revision': '1.4.3',
   },
-  values: { On: 0, ConfiguredName: 'Shed Light' },
-  linked: undefined,
-  instance: {
-    name: 'homebridge',
-    username: '1C:22:3D:E3:CF:34',
-    ipAddress: '192.168.1.11',
-    port: 46283,
-
+  'values': {
+    'CurrentRelativeHumidity': 0,
   },
-  uniqueId: '664195d5556f1e0b424ed32bcd863ec8954c76f8ab81cc399f0e24f8827806d1',
-  refreshCharacteristics: refreshCharacteristics,
-  setCharacteristic: setCharacteristic,
-  getCharacteristic: getCharacteristic
+  'instance': {
+    'name': 'Default Model',
+    'username': '69:62:B7:AE:38:D4',
+    'ipAddress': '192.168.1.11',
+    'port': 51830,
+  },
+  'uniqueId': '4a1df9989d8d4e7b440455f15d9bdd5326d81f80ccfa753499899864a5248657',
 };
-
 
 const humiditySensorServiceOnOff: ServiceType = {
   aid: 13,
@@ -286,7 +306,7 @@ const humiditySensorServiceOnOff: ServiceType = {
       description: 'On',
       value: 0,
       format: 'bool',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -294,8 +314,8 @@ const humiditySensorServiceOnOff: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 13,
@@ -307,7 +327,7 @@ const humiditySensorServiceOnOff: ServiceType = {
       description: 'Configured Name',
       value: 'Shed Light',
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -315,16 +335,16 @@ const humiditySensorServiceOnOff: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }
+      setValue,
+      getValue,
+    },
   ],
   accessoryInformation: {
-    Manufacturer: 'Tasmota',
-    Model: 'WiOn',
-    Name: 'Shed Light',
+    'Manufacturer': 'Tasmota',
+    'Model': 'WiOn',
+    'Name': 'Shed Light',
     'Serial Number': '02231D-jessie',
-    'Firmware Revision': '9.5.0tasmota'
+    'Firmware Revision': '9.5.0tasmota',
   },
   values: { On: 0, ConfiguredName: 'Shed Light' },
   linked: undefined,
@@ -336,9 +356,9 @@ const humiditySensorServiceOnOff: ServiceType = {
 
   },
   uniqueId: '664195d5556f1e0b424ed32bcd863ec8954c76f8ab81cc399f0e24f8827806d1',
-  refreshCharacteristics: refreshCharacteristics,
-  setCharacteristic: setCharacteristic,
-  getCharacteristic: getCharacteristic
+  refreshCharacteristics,
+  setCharacteristic,
+  getCharacteristic,
 };
 
 const humiditySensorServiceDimmer: ServiceType = {
@@ -359,7 +379,7 @@ const humiditySensorServiceDimmer: ServiceType = {
       description: 'On',
       value: 0,
       format: 'bool',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -367,8 +387,8 @@ const humiditySensorServiceDimmer: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 14,
@@ -380,7 +400,7 @@ const humiditySensorServiceDimmer: ServiceType = {
       description: 'Brightness',
       value: 100,
       format: 'int',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: 'percentage',
       maxValue: 100,
       minValue: 0,
@@ -388,8 +408,8 @@ const humiditySensorServiceDimmer: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 14,
@@ -401,7 +421,7 @@ const humiditySensorServiceDimmer: ServiceType = {
       description: 'Configured Name',
       value: 'Front Hall',
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -409,16 +429,16 @@ const humiditySensorServiceDimmer: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }
+      setValue,
+      getValue,
+    },
   ],
   accessoryInformation: {
-    Manufacturer: 'Tasmota',
-    Model: 'Tuya MCU',
-    Name: 'Front Hall',
+    'Manufacturer': 'Tasmota',
+    'Model': 'Tuya MCU',
+    'Name': 'Front Hall',
     'Serial Number': '23CAC5-jessie',
-    'Firmware Revision': '9.5.0tasmota'
+    'Firmware Revision': '9.5.0tasmota',
   },
   values: { On: 0, Brightness: 100, ConfiguredName: 'Front Hall' },
   linked: undefined,
@@ -426,142 +446,142 @@ const humiditySensorServiceDimmer: ServiceType = {
     name: 'homebridge',
     username: '1C:22:3D:E3:CF:34',
     ipAddress: '192.168.1.11',
-    port: 46283
+    port: 46283,
   },
   uniqueId: '028fc478c0b4b116ead9be0dc8a72251b351b745cbc3961704268737101c803d',
-  refreshCharacteristics: refreshCharacteristics,
-  setCharacteristic: setCharacteristic,
-  getCharacteristic: getCharacteristic
+  refreshCharacteristics,
+  setCharacteristic,
+  getCharacteristic,
 };
 
 const commandOnOff = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandMalformed = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
-  ]
+  execution: [
+  ],
 };
 
 const commandIncorrectCommand = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.notACommand",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.notACommand',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandBrightness = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandColorHSV = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandColorHumidity = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };

@@ -1,41 +1,20 @@
-
-import { Characteristic } from '../hap-types';
-import { AccessoryTypeExecuteResponse, HapDevice } from '../interfaces';
 import { ServiceType } from '@homebridge/hap-client';
-import { SmartHomeV1ExecuteResponseCommands, SmartHomeV1ExecuteRequestCommands } from 'actions-on-google';
+import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
+import { Characteristic } from '../hap-types';
+import { hapBaseType, hapBaseType_t } from './hapBaseType';
 
-export class Window implements HapDevice {
+export class Window extends hapBaseType implements hapBaseType_t {
   sync(service: ServiceType) {
-    return {
-      id: service.uniqueId,
+
+    return this.createSyncData(service, {
       type: 'action.devices.types.WINDOW',
       traits: [
         'action.devices.traits.OpenClose',
       ],
-      name: {
-        defaultNames: [
-          service.serviceName,
-          service.accessoryInformation.Name,
-        ],
-        name: service.serviceName,
-        nicknames: [],
-      },
-      willReportState: true,
       attributes: {
         openDirection: ['LEFT', 'RIGHT'],
       },
-      deviceInfo: {
-        manufacturer: service.accessoryInformation.Manufacturer,
-        model: service.accessoryInformation.Model,
-      },
-      customData: {
-        aid: service.aid,
-        iid: service.iid,
-        instanceUsername: service.instance.username,
-        instanceIpAddress: service.instance.ipAddress,
-        instancePort: service.instance.port,
-      },
-    };
+    });
   }
 
   query(service: ServiceType) {
@@ -55,8 +34,7 @@ export class Window implements HapDevice {
         await service.serviceCharacteristics.find(x => x.uuid === Characteristic.TargetPosition).setValue(command.execution[0].params.openPercent);
         return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
-      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: 'unknown command ' + command.execution[0].command }; }
+      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` }; }
     }
   }
-
 }

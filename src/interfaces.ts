@@ -1,6 +1,6 @@
-import { PlatformConfig } from 'homebridge';
 import { ServiceType } from '@homebridge/hap-client';
-import { SmartHomeV1ExecuteResponseCommands, SmartHomeV1ExecuteRequestCommands } from 'actions-on-google';
+import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
+import { PlatformConfig } from 'homebridge';
 
 export interface PluginConfig extends PlatformConfig {
   platform: string;
@@ -55,7 +55,7 @@ export interface HapService {
   hidden?: boolean;
   serialNumber?: string;
 
-  // custom  
+  // custom
   uniqueId?: string;
   serviceName?: string;
   accessoryInformation?: any;
@@ -103,7 +103,7 @@ export interface AccessoryTypeExecuteResponse {
 }
 
 export interface HapDevice {
-  sync(service: ServiceType): Record<string, any>;
-  query(service: ServiceType): Record<string, any>;
-  execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): Promise<SmartHomeV1ExecuteResponseCommands>;
+  sync: (service: ServiceType) => Record<string, any>;
+  query: (service: ServiceType) => Record<string, any>;
+  execute: (service: ServiceType, command: SmartHomeV1ExecuteRequestCommands) => Promise<SmartHomeV1ExecuteResponseCommands>;
 }

@@ -1,13 +1,11 @@
-import { Television } from "./television";
-import { HapClient, ServiceType, CharacteristicType } from '@homebridge/hap-client';
-import { SmartHomeV1SyncResponse, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
-import { AccessoryTypeExecuteResponse } from '../interfaces';
+import { CharacteristicType, ServiceType } from '@homebridge/hap-client';
+import { Television } from './television';
 
-var television = new Television();
+const television = new Television();
 
-describe('Television', () => {
+describe('television', () => {
   describe('sync message', () => {
-    test('Television with On/Off only', async () => {
+    it('television with On/Off only', async () => {
       const response: any = television.sync(televisionServiceOnOff);
       expect(response).toBeDefined();
       expect(response.type).toBe('action.devices.types.TV');
@@ -19,7 +17,7 @@ describe('Television', () => {
     });
   });
   describe('query message', () => {
-    test('Television with On/Off only', async () => {
+    it('television with On/Off only', async () => {
       const response = television.query(televisionServiceOnOff);
       expect(response).toBeDefined();
       expect(response.on).toBeDefined();
@@ -29,7 +27,7 @@ describe('Television', () => {
   });
 
   describe('execute message', () => {
-    test('Television with On/Off only', async () => {
+    it('television with On/Off only', async () => {
       const response = await television.execute(televisionServiceOnOff, commandOnOff);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
@@ -37,22 +35,21 @@ describe('Television', () => {
       // await sleep(10000)
     });
 
-
-    test('Television with On/Off only - commandMalformed', async () => {
+    it('television with On/Off only - commandMalformed', async () => {
       const response = await television.execute(televisionServiceOnOff, commandMalformed);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('ERROR');
     });
 
-    test('Television with On/Off only - commandIncorrectCommand', async () => {
+    it('television with On/Off only - commandIncorrectCommand', async () => {
       const response = await television.execute(televisionServiceOnOff, commandIncorrectCommand);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('ERROR');
     });
 
-    test('Television with On/Off only - Error', async () => {
+    it('television with On/Off only - Error', async () => {
       expect.assertions(1);
       televisionServiceOnOff.serviceCharacteristics[0].setValue = setValueError;
       expect(television.execute(televisionServiceOnOff, commandOnOff)).rejects.toThrow('Error setting value');
@@ -68,23 +65,23 @@ async function sleep(ms: number) {
 const setValue = async function (value: string | number | boolean): Promise<CharacteristicType> {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "Television",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'Television',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -93,23 +90,23 @@ const setValueError = async function (value: string | number | boolean): Promise
   // Perform your operations here
   throw new Error('Error setting value');
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "Lightbulb",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'Lightbulb',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -117,23 +114,23 @@ const setValueError = async function (value: string | number | boolean): Promise
 const getValue = async function (): Promise<CharacteristicType> {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "Television",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'Television',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -145,23 +142,23 @@ const refreshCharacteristics = async function (): Promise<ServiceType> {
 const setCharacteristic = async function (value: string | number | boolean): Promise<ServiceType> {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "Television",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'Television',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return televisionServiceOnOff;
 };
@@ -169,23 +166,23 @@ const setCharacteristic = async function (value: string | number | boolean): Pro
 const getCharacteristic = function (): CharacteristicType {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "Television",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'Television',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -208,7 +205,7 @@ const televisionServiceOnOff: ServiceType = {
       description: 'On',
       value: 0,
       format: 'bool',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -216,8 +213,8 @@ const televisionServiceOnOff: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 13,
@@ -229,7 +226,7 @@ const televisionServiceOnOff: ServiceType = {
       description: 'Configured Name',
       value: 'Shed Light',
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -237,16 +234,16 @@ const televisionServiceOnOff: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }
+      setValue,
+      getValue,
+    },
   ],
   accessoryInformation: {
-    Manufacturer: 'Tasmota',
-    Model: 'WiOn',
-    Name: 'Shed Light',
+    'Manufacturer': 'Tasmota',
+    'Model': 'WiOn',
+    'Name': 'Shed Light',
     'Serial Number': '02231D-jessie',
-    'Firmware Revision': '9.5.0tasmota'
+    'Firmware Revision': '9.5.0tasmota',
   },
   values: { On: 0, ConfiguredName: 'Shed Light' },
   linked: undefined,
@@ -258,9 +255,9 @@ const televisionServiceOnOff: ServiceType = {
 
   },
   uniqueId: '664195d5556f1e0b424ed32bcd863ec8954c76f8ab81cc399f0e24f8827806d1',
-  refreshCharacteristics: refreshCharacteristics,
-  setCharacteristic: setCharacteristic,
-  getCharacteristic: getCharacteristic
+  refreshCharacteristics,
+  setCharacteristic,
+  getCharacteristic,
 };
 
 const televisionServiceDimmer: ServiceType = {
@@ -281,7 +278,7 @@ const televisionServiceDimmer: ServiceType = {
       description: 'On',
       value: 0,
       format: 'bool',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -289,8 +286,8 @@ const televisionServiceDimmer: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 14,
@@ -302,7 +299,7 @@ const televisionServiceDimmer: ServiceType = {
       description: 'Brightness',
       value: 100,
       format: 'int',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: 'percentage',
       maxValue: 100,
       minValue: 0,
@@ -310,8 +307,8 @@ const televisionServiceDimmer: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 14,
@@ -323,7 +320,7 @@ const televisionServiceDimmer: ServiceType = {
       description: 'Configured Name',
       value: 'Front Hall',
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -331,16 +328,16 @@ const televisionServiceDimmer: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }
+      setValue,
+      getValue,
+    },
   ],
   accessoryInformation: {
-    Manufacturer: 'Tasmota',
-    Model: 'Tuya MCU',
-    Name: 'Front Hall',
+    'Manufacturer': 'Tasmota',
+    'Model': 'Tuya MCU',
+    'Name': 'Front Hall',
     'Serial Number': '23CAC5-jessie',
-    'Firmware Revision': '9.5.0tasmota'
+    'Firmware Revision': '9.5.0tasmota',
   },
   values: { On: 0, Brightness: 100, ConfiguredName: 'Front Hall' },
   linked: undefined,
@@ -348,142 +345,142 @@ const televisionServiceDimmer: ServiceType = {
     name: 'homebridge',
     username: '1C:22:3D:E3:CF:34',
     ipAddress: '192.168.1.11',
-    port: 46283
+    port: 46283,
   },
   uniqueId: '028fc478c0b4b116ead9be0dc8a72251b351b745cbc3961704268737101c803d',
-  refreshCharacteristics: refreshCharacteristics,
-  setCharacteristic: setCharacteristic,
-  getCharacteristic: getCharacteristic
+  refreshCharacteristics,
+  setCharacteristic,
+  getCharacteristic,
 };
 
 const commandOnOff = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandMalformed = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
-  ]
+  execution: [
+  ],
 };
 
 const commandIncorrectCommand = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.notACommand",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.notACommand',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandBrightness = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandColorHSV = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandColorTemperature = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };

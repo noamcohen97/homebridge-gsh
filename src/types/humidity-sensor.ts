@@ -1,43 +1,18 @@
-import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1SyncDevices, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
-import { Characteristic } from '../hap-types';
-import { AccessoryTypeExecuteResponse, HapDevice } from '../interfaces';
-import { Hap } from '../hap';
+import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { ServiceType } from '@homebridge/hap-client';
+import { Characteristic } from '../hap-types';
+import { hapBaseType, hapBaseType_t } from './hapBaseType';
 
-export class HumiditySensor implements HapDevice {
+export class HumiditySensor extends hapBaseType implements hapBaseType_t {
   sync(service: ServiceType): SmartHomeV1SyncDevices {
-    return {
-      id: service.uniqueId,
+
+    return this.createSyncData(service, {
       type: 'action.devices.types.SENSOR',
-      traits: [
-        'action.devices.traits.HumiditySetting',
-      ],
-      name: {
-        defaultNames: [
-          service.serviceName,
-          service.accessoryInformation.Name,
-        ],
-        name: service.serviceName,
-        nicknames: [],
-      },
-      willReportState: true,
+      traits: ['action.devices.traits.HumiditySetting'],
       attributes: {
         queryOnlyHumiditySetting: true,
       },
-      deviceInfo: {
-        manufacturer: service.accessoryInformation.Manufacturer,
-        model: service.accessoryInformation.Model,
-        hwVersion: service.accessoryInformation.HardwareRevision,
-        swVersion: service.accessoryInformation.SoftwareRevision,
-      },
-      customData: {
-        aid: service.aid,
-        iid: service.iid,
-        instanceUsername: service.instance.username,
-        instanceIpAddress: service.instance.ipAddress,
-        instancePort: service.instance.port,
-      },
-    };
+    });
   }
 
   query(service: ServiceType) {
@@ -51,7 +26,6 @@ export class HumiditySensor implements HapDevice {
     if (!command.execution.length) {
       return { ids: [service.uniqueId], status: 'ERROR', debugString: 'missing command' };
     }
-    return { ids: [service.uniqueId], status: 'ERROR', debugString: 'unknown command ' + command.execution[0].command };;
+    return { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` };
   }
-
 }

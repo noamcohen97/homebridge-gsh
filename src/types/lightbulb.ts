@@ -1,11 +1,12 @@
+/* eslint-disable max-len */
+
+import { ServiceType } from '@homebridge/hap-client';
+import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
 import { Characteristic } from '../hap-types';
-import { HapClient, ServiceType, CharacteristicType } from '@homebridge/hap-client';
-import { AccessoryTypeExecuteResponse, HapDevice } from '../interfaces';
-import { SmartHomeV1ExecuteResponseCommands, SmartHomeV1ExecuteRequestCommands } from 'actions-on-google';
+import { hapBaseType, hapBaseType_t } from './hapBaseType';
 
-export class Lightbulb implements HapDevice {
+export class Lightbulb extends hapBaseType implements hapBaseType_t {
   sync(service: ServiceType) {
-
     const attributes = {} as any;
     const traits = [
       'action.devices.traits.OnOff',
@@ -32,37 +33,16 @@ export class Lightbulb implements HapDevice {
       attributes.commandOnlyColorSetting = false;
     }
 
-    return {
-      id: service.uniqueId,
+    return this.createSyncData(service, {
       type: 'action.devices.types.LIGHT',
       traits,
       attributes,
-      name: {
-        defaultNames: [
-          service.serviceName,
-          service.accessoryInformation.Name,
-        ],
-        name: service.serviceName,
-        nicknames: [],
-      },
-      willReportState: true,
-      deviceInfo: {
-        manufacturer: service.accessoryInformation.Manufacturer,
-        model: service.accessoryInformation.Model,
-      },
-      customData: {
-        aid: service.aid,
-        iid: service.iid,
-        instanceUsername: service.instance.username,
-        instanceIpAddress: service.instance.ipAddress,
-        instancePort: service.instance.port,
-      },
-    };
+    });
   }
 
   query(service: ServiceType) {
     const response = {
-      on: service.serviceCharacteristics.find(x => x.uuid === Characteristic.On).value ? true : false,
+      on: !!service.serviceCharacteristics.find(x => x.uuid === Characteristic.On).value,
       online: true,
     } as any;
 
@@ -123,8 +103,9 @@ export class Lightbulb implements HapDevice {
           await service.serviceCharacteristics.find(x => x.uuid === Characteristic.ColorTemperature).setValue((max - min) - (hbAccessoryValue - min) + min);
           return { ids: [service.uniqueId], status: 'SUCCESS' };
         }
+        break;
       }
-      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: 'unknown command ' + command.execution[0].command }; }
+      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` }; }
     }
   }
 }

@@ -1,28 +1,19 @@
-import { Characteristic } from '../hap-types';
-import { AccessoryTypeExecuteResponse, HapDevice } from '../interfaces';
 import { ServiceType } from '@homebridge/hap-client';
-import { SmartHomeV1ExecuteResponseCommands, SmartHomeV1ExecuteRequestCommands } from 'actions-on-google';
+import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
+import { Characteristic } from '../hap-types';
+import { hapBaseType, hapBaseType_t } from './hapBaseType';
 
-export class SecuritySystem implements HapDevice {
+export class SecuritySystem extends hapBaseType implements hapBaseType_t {
   public twoFactorRequired = true;
   public returnStateOnExecute = true;
 
   sync(service: ServiceType) {
-    return {
-      id: service.uniqueId,
+
+    return this.createSyncData(service, {
       type: 'action.devices.types.SECURITYSYSTEM',
       traits: [
         'action.devices.traits.ArmDisarm',
       ],
-      name: {
-        defaultNames: [
-          service.serviceName,
-          service.accessoryInformation.Name,
-        ],
-        name: service.serviceName,
-        nicknames: [],
-      },
-      willReportState: true,
       attributes: {
         availableArmLevels: {
           levels: [
@@ -35,7 +26,8 @@ export class SecuritySystem implements HapDevice {
                 level_synonym: ['Anwesend'],
                 lang: 'de',
               }],
-            }, {
+            },
+            {
               level_name: 'AWAY',
               level_values: [{
                 level_synonym: ['Away'],
@@ -44,7 +36,8 @@ export class SecuritySystem implements HapDevice {
                 level_synonym: ['Abwesend'],
                 lang: 'de',
               }],
-            }, {
+            },
+            {
               level_name: 'NIGHT',
               level_values: [{
                 level_synonym: ['Night'],
@@ -58,18 +51,8 @@ export class SecuritySystem implements HapDevice {
           ordered: true,
         },
       },
-      deviceInfo: {
-        manufacturer: service.accessoryInformation.Manufacturer,
-        model: service.accessoryInformation.Model,
-      },
-      customData: {
-        aid: service.aid,
-        iid: service.iid,
-        instanceUsername: service.instance.username,
-        instanceIpAddress: service.instance.ipAddress,
-        instancePort: service.instance.port,
-      },
-    };
+    });
+
   }
 
   query(service: ServiceType) {
@@ -123,9 +106,9 @@ export class SecuritySystem implements HapDevice {
           isArmed: command.execution[0].params.arm,
           currentArmLevel: command.execution[0].params.armLevel,
         };
-        return { ids: [service.uniqueId], status: 'SUCCESS', states: states };
+        return { ids: [service.uniqueId], status: 'SUCCESS', states };
       }
-      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: 'unknown command ' + command.execution[0].command }; }
+      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` }; }
     }
   }
 

@@ -1,13 +1,11 @@
-import { GarageDoorOpener } from "./garage-door-opener";
-import { HapClient, ServiceType, CharacteristicType } from '@homebridge/hap-client';
-import { SmartHomeV1SyncResponse, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
-import { AccessoryTypeExecuteResponse } from '../interfaces';
+import { CharacteristicType, ServiceType } from '@homebridge/hap-client';
+import { GarageDoorOpener } from './garage-door-opener';
 
-var garageDoorOpener = new GarageDoorOpener();
+const garageDoorOpener = new GarageDoorOpener();
 
-describe('GarageDoorOpener', () => {
+describe('garageDoorOpener', () => {
   describe('sync message', () => {
-    test('GarageDoorOpener with OpenClose only', async () => {
+    it('garageDoorOpener with OpenClose only', async () => {
       const response: any = garageDoorOpener.sync(garageDoorOpenerServiceOpenClose);
       expect(response).toBeDefined();
       expect(response.type).toBe('action.devices.types.GARAGE');
@@ -22,7 +20,7 @@ describe('GarageDoorOpener', () => {
     });
   });
   describe('query message', () => {
-    test('GarageDoorOpener with OpenClose only', async () => {
+    it('garageDoorOpener with OpenClose only', async () => {
       const response = garageDoorOpener.query(garageDoorOpenerServiceOpenClose);
       expect(response).toBeDefined();
       expect(response.on).toBeDefined();
@@ -32,7 +30,7 @@ describe('GarageDoorOpener', () => {
   });
 
   describe('execute message', () => {
-    test('GarageDoorOpener with OpenClose only', async () => {
+    it('garageDoorOpener with OpenClose only', async () => {
       const response = await garageDoorOpener.execute(garageDoorOpenerServiceOpenClose, commandOpenClose);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
@@ -40,22 +38,21 @@ describe('GarageDoorOpener', () => {
       // await sleep(10000)
     });
 
-
-    test('GarageDoorOpener with OpenClose only - commandMalformed', async () => {
+    it('garageDoorOpener with OpenClose only - commandMalformed', async () => {
       const response = await garageDoorOpener.execute(garageDoorOpenerServiceOpenClose, commandMalformed);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('ERROR');
     });
 
-    test('GarageDoorOpener with OpenClose only - commandIncorrectCommand', async () => {
+    it('garageDoorOpener with OpenClose only - commandIncorrectCommand', async () => {
       const response = await garageDoorOpener.execute(garageDoorOpenerServiceOpenClose, commandIncorrectCommand);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('ERROR');
     });
 
-    test('GarageDoorOpener with OpenClose only - Error', async () => {
+    it('garageDoorOpener with OpenClose only - Error', async () => {
       expect.assertions(1);
       garageDoorOpenerServiceOpenClose.serviceCharacteristics[0].setValue = setValueError;
       expect(garageDoorOpener.execute(garageDoorOpenerServiceOpenClose, commandOpenClose)).rejects.toThrow('Error setting value');
@@ -71,23 +68,23 @@ async function sleep(ms: number) {
 const setValue = async function (value: string | number | boolean): Promise<CharacteristicType> {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "GarageDoorOpener",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'GarageDoorOpener',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -96,23 +93,23 @@ const setValueError = async function (value: string | number | boolean): Promise
   // Perform your operations here
   throw new Error('Error setting value');
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "Lightbulb",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'Lightbulb',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -120,23 +117,23 @@ const setValueError = async function (value: string | number | boolean): Promise
 const getValue = async function (): Promise<CharacteristicType> {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "GarageDoorOpener",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'GarageDoorOpener',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -148,23 +145,23 @@ const refreshCharacteristics = async function (): Promise<ServiceType> {
 const setCharacteristic = async function (value: string | number | boolean): Promise<ServiceType> {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "GarageDoorOpener",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'GarageDoorOpener',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return garageDoorOpenerServiceOpenClose;
 };
@@ -172,23 +169,23 @@ const setCharacteristic = async function (value: string | number | boolean): Pro
 const getCharacteristic = function (): CharacteristicType {
   // Perform your operations here
   const result: CharacteristicType = {
-    "aid": 1,
-    "iid": 1,
-    "uuid": "00000025-0000-1000-8000-0026BB765291",
-    "type": "On",
-    "serviceType": "GarageDoorOpener",
-    "serviceName": "Trailer Step",
-    "description": "On",
-    "value": 0,
-    "format": "bool",
-    "perms": [
-      "ev",
-      "pr",
-      "pw"
+    aid: 1,
+    iid: 1,
+    uuid: '00000025-0000-1000-8000-0026BB765291',
+    type: 'On',
+    serviceType: 'GarageDoorOpener',
+    serviceName: 'Trailer Step',
+    description: 'On',
+    value: 0,
+    format: 'bool',
+    perms: [
+      'ev',
+      'pr',
+      'pw',
     ],
-    "canRead": true,
-    "canWrite": true,
-    "ev": true
+    canRead: true,
+    canWrite: true,
+    ev: true,
   };
   return result;
 };
@@ -211,7 +208,7 @@ const garageDoorOpenerServiceOpenClose: ServiceType = {
       description: 'On',
       value: 0,
       format: 'bool',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -219,8 +216,8 @@ const garageDoorOpenerServiceOpenClose: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
+      setValue,
+      getValue,
     },
     {
       aid: 13,
@@ -232,7 +229,7 @@ const garageDoorOpenerServiceOpenClose: ServiceType = {
       description: 'Configured Name',
       value: 1,
       format: 'string',
-      perms: ["ev", "pr", "pw"],
+      perms: ['ev', 'pr', 'pw'],
       unit: undefined,
       maxValue: undefined,
       minValue: undefined,
@@ -240,16 +237,16 @@ const garageDoorOpenerServiceOpenClose: ServiceType = {
       canRead: true,
       canWrite: true,
       ev: true,
-      setValue: setValue,
-      getValue: getValue
-    }
+      setValue,
+      getValue,
+    },
   ],
   accessoryInformation: {
-    Manufacturer: 'Tasmota',
-    Model: 'WiOn',
-    Name: 'Shed Light',
+    'Manufacturer': 'Tasmota',
+    'Model': 'WiOn',
+    'Name': 'Shed Light',
     'Serial Number': '02231D-jessie',
-    'Firmware Revision': '9.5.0tasmota'
+    'Firmware Revision': '9.5.0tasmota',
   },
   values: { On: 0, ConfiguredName: 'Shed Light' },
   linked: undefined,
@@ -260,162 +257,162 @@ const garageDoorOpenerServiceOpenClose: ServiceType = {
     port: 46283,
   },
   uniqueId: '664195d5556f1e0b424ed32bcd863ec8954c76f8ab81cc399f0e24f8827806d1',
-  refreshCharacteristics: refreshCharacteristics,
-  setCharacteristic: setCharacteristic,
-  getCharacteristic: getCharacteristic
+  refreshCharacteristics,
+  setCharacteristic,
+  getCharacteristic,
 };
 
 const commandOnOff = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandOpenClose = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OpenClose",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OpenClose',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandMalformed = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
-  ]
+  execution: [
+  ],
 };
 
 const commandIncorrectCommand = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.notACommand",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.notACommand',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandBrightness = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandColorHSV = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };
 
 const commandColorTemperature = {
-  "devices": [
+  devices: [
     {
-      "customData": {
-        "aid": 75,
-        "iid": 8,
-        "instanceIpAddress": "192.168.1.11",
-        "instancePort": 46283,
-        "instanceUsername": "1C:22:3D:E3:CF:34"
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
       },
-      "id": "b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738"
-    }
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
   ],
-  "execution": [
+  execution: [
     {
-      "command": "action.devices.commands.OnOff",
-      "params": {
-        "on": true
-      }
-    }
-  ]
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: true,
+      },
+    },
+  ],
 };

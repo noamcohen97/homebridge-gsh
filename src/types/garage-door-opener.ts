@@ -1,9 +1,9 @@
 import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { ServiceType } from '@homebridge/hap-client';
 import { Characteristic } from '../hap-types';
-import { hapBaseType, hapBaseType_t } from './hapBaseType';
+import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
-export class GarageDoorOpener extends hapBaseType implements hapBaseType_t {
+export class GarageDoorOpener extends ghToHap implements ghToHap_t {
   public twoFactorRequired = true;
 
   sync(service: ServiceType): SmartHomeV1SyncDevices {

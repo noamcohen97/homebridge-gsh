@@ -1,9 +1,9 @@
 import { ServiceType } from '@homebridge/hap-client';
 import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
 import { Characteristic } from '../hap-types';
-import { hapBaseType, hapBaseType_t } from './hapBaseType';
+import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
-export class Switch extends hapBaseType implements hapBaseType_t {
+export class Switch extends ghToHap implements ghToHap_t {
   private deviceType: string;
 
   constructor(type) {

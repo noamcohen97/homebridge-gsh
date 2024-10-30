@@ -1,9 +1,10 @@
 import { CharacteristicType, ServiceType } from '@homebridge/hap-client';
-import { SmartHomeV1QueryRequestDevices } from 'actions-on-google';
+import { SmartHomeV1QueryRequestDevices, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { Hap } from './hap';
 import { PluginConfig } from './interfaces';
 import { Log } from './logger';
 import fs from 'node:fs';
+import { expectType } from 'ts-expect';
 
 // socket, log, pin: string, config: PluginConfig
 
@@ -87,7 +88,9 @@ describe('process the SYNC intent', () => {
   describe('SYNC message with delay to allow manual testing', () => {
     test('lightbulb with On/Off only', async () => {
       const response: any = await hap.buildSyncResponse();
-      await fs.writeFile('buildSyncResponse.json', JSON.stringify(response, null, 2), (err: any) => {
+      expectType<SmartHomeV1SyncDevices[]>(response);
+      /*
+     // await fs.writeFile('buildSyncResponse.json', JSON.stringify(response, null, 2), (err: any) => {
         if (err) {
           // eslint-disable-next-line no-console
           console.log(err);
@@ -99,6 +102,7 @@ describe('process the SYNC intent', () => {
           console.log(err);
         }
       });
+      */
       //      console.log('response', response);
     });
   });

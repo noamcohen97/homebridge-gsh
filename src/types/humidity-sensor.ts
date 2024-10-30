@@ -1,9 +1,9 @@
 import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { ServiceType } from '@homebridge/hap-client';
 import { Characteristic } from '../hap-types';
-import { hapBaseType, hapBaseType_t } from './hapBaseType';
+import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
-export class HumiditySensor extends hapBaseType implements hapBaseType_t {
+export class HumiditySensor extends ghToHap implements ghToHap_t {
   sync(service: ServiceType): SmartHomeV1SyncDevices {
 
     return this.createSyncData(service, {

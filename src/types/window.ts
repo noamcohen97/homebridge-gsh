@@ -1,9 +1,9 @@
 import { ServiceType } from '@homebridge/hap-client';
 import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
 import { Characteristic } from '../hap-types';
-import { hapBaseType, hapBaseType_t } from './hapBaseType';
+import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
-export class Window extends hapBaseType implements hapBaseType_t {
+export class Window extends ghToHap implements ghToHap_t {
   sync(service: ServiceType) {
 
     return this.createSyncData(service, {

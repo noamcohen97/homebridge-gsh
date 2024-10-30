@@ -4,9 +4,9 @@ import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseComma
 import { ServiceType } from '@homebridge/hap-client';
 import { Hap } from '../hap';
 import { Characteristic } from '../hap-types';
-import { hapBaseType, hapBaseType_t } from './hapBaseType';
+import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
-export class Thermostat extends hapBaseType implements hapBaseType_t {
+export class Thermostat extends ghToHap implements ghToHap_t {
   constructor(
     private hap: Hap,
   ) {

@@ -1,12 +1,12 @@
 /* eslint-disable max-len */
 
 import { ServiceType } from '@homebridge/hap-client';
-import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
+import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { Characteristic } from '../hap-types';
-import { hapBaseType, hapBaseType_t } from './hapBaseType';
+import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
-export class Lightbulb extends hapBaseType implements hapBaseType_t {
-  sync(service: ServiceType) {
+export class Lightbulb extends ghToHap implements ghToHap_t {
+  sync(service: ServiceType): SmartHomeV1SyncDevices {
     const attributes = {} as any;
     const traits = [
       'action.devices.traits.OnOff',

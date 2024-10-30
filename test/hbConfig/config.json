@@ -1,6 +1,6 @@
 {
   "bridge": {
-    "name": "HB-GSH-Test",
+    "name": "HB GSH Test",
     "username": "AA:BB:CC:DD:EE:02",
     "port": 51826,
     "pin": "031-45-154"

@@ -22,6 +22,7 @@ import { TemperatureSensor } from './types/temperature-sensor';
 import { Thermostat } from './types/thermostat';
 import { Window } from './types/window';
 import { WindowCovering } from './types/window-covering';
+import { createHash } from 'node:crypto';
 
 export class Hap {
   socket;
@@ -288,6 +289,14 @@ export class Hap {
       services = services.filter(x => this.types[x.type] !== undefined);
       services = services.filter(x => !this.accessoryFilter.includes(x.serviceName));
       services = services.filter(x => !this.accessorySerialFilter.includes(x.accessoryInformation['Serial Number']));
+      services = services.map(service => {
+        return {
+          ...service,
+          uniqueId: createHash('sha256')
+            .update(`${service.instance.username}${service.aid}${service.iid}${service.uuid}`)
+            .digest('hex'),
+        };
+      });      // The embeded uniqueId formula is different with Hap Client
       return services;
     }).catch((e) => {
       if (e.response?.status === 401) {

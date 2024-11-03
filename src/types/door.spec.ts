@@ -1,3 +1,4 @@
+import { expect } from '@jest/globals';
 import { CharacteristicType, ServiceType } from '@homebridge/hap-client';
 import { Door } from './door';
 

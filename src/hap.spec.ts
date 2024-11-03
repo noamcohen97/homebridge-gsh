@@ -1,3 +1,4 @@
+import { describe, it, expect } from '@jest/globals';
 import { CharacteristicType, ServiceType } from '@homebridge/hap-client';
 import { SmartHomeV1QueryRequestDevices, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { Hap } from './hap';

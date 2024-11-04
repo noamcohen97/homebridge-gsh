@@ -23,17 +23,32 @@ export class HeaterCooler extends ghToHap implements ghToHap_t {
       availableThermostatModes.push('auto');
     }
 
+    const traits = [
+      'action.devices.traits.TemperatureSetting',
+      'action.devices.traits.OnOff',
+    ];
+
+    const attributes: any = {
+      availableThermostatModes: availableThermostatModes.join(','),
+      thermostatTemperatureUnit: this.hap.config.forceFahrenheit
+        ? 'F'
+        : service.serviceCharacteristics.find(x => x.uuid === Characteristic.TemperatureDisplayUnits)?.value ? 'F' : 'C',
+      commandOnlyOnOff: false,
+      queryOnlyOnOff: false,
+    };
+
+    let type = 'action.devices.types.THERMOSTAT';
+
+    if (service.serviceCharacteristics.find(x => x.uuid === Characteristic.RotationSpeed)) {
+      type = 'action.devices.types.AC_UNIT';
+      traits.push('action.devices.traits.FanSpeed');
+      attributes.supportsFanSpeedPercent = true;
+    }
+
     return this.createSyncData(service, {
-      type: 'action.devices.types.THERMOSTAT',
-      traits: [
-        'action.devices.traits.TemperatureSetting',
-      ],
-      attributes: {
-        availableThermostatModes: availableThermostatModes.join(','),
-        thermostatTemperatureUnit: this.hap.config.forceFahrenheit
-          ? 'F'
-          : service.serviceCharacteristics.find(x => x.uuid === Characteristic.TemperatureDisplayUnits)?.value ? 'F' : 'C',
-      },
+      type,
+      traits,
+      attributes,
     });
   }
 
@@ -44,6 +59,7 @@ export class HeaterCooler extends ghToHap implements ghToHap_t {
 
     const response = {
       online: true,
+      on: !!activeState,
       thermostatMode,
       thermostatTemperatureAmbient: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentTemperature).value,
     } as any;
@@ -60,6 +76,10 @@ export class HeaterCooler extends ghToHap implements ghToHap_t {
         response.thermostatTemperatureSetpointLow = service.serviceCharacteristics.find(x => x.uuid === Characteristic.HeatingThresholdTemperature).value;
         response.thermostatTemperatureSetpointHigh = service.serviceCharacteristics.find(x => x.uuid === Characteristic.CoolingThresholdTemperature).value;
       }
+    }
+
+    if (service.serviceCharacteristics.find(x => x.uuid === Characteristic.RotationSpeed)) {
+      response.currentFanSpeedPercent = service.serviceCharacteristics.find(x => x.uuid === Characteristic.RotationSpeed).value;
     }
 
     return response;
@@ -99,6 +119,19 @@ export class HeaterCooler extends ghToHap implements ghToHap_t {
 
         await service.serviceCharacteristics.find(x => x.uuid === Characteristic.CoolingThresholdTemperature).setValue(command.execution[0].params.thermostatTemperatureSetpointHigh);
         await service.serviceCharacteristics.find(x => x.uuid === Characteristic.HeatingThresholdTemperature).setValue(command.execution[0].params.thermostatTemperatureSetpointLow);
+        return { ids: [service.uniqueId], status: 'SUCCESS' };
+      }
+      case ('action.devices.commands.SetFanSpeed'): {
+
+        if (!service.serviceCharacteristics.find(x => x.uuid === Characteristic.RotationSpeed)) {
+          return { ids: [service.uniqueId], status: 'ERROR', debugString: 'fan speed not supported' };
+        }
+        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.RotationSpeed).setValue(command.execution[0].params.fanSpeedPercent);
+        return { ids: [service.uniqueId], status: 'SUCCESS' };
+      }
+      case ('action.devices.commands.OnOff'): {
+
+        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active).setValue(command.execution[0].params.on ? 1 : 0);
         return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
       default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` }; }

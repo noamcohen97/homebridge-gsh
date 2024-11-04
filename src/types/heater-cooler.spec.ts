@@ -44,9 +44,14 @@ describe('heaterCooler', () => {
       expect(response).toBeDefined();
       expect(response.type).toBe('action.devices.types.THERMOSTAT');
       expect(response.traits).toContain('action.devices.traits.TemperatureSetting');
+      expect(response.traits).toContain('action.devices.traits.OnOff');
+      expect(response.traits).not.toContain('action.devices.traits.FanSpeed');
       expect(response.traits).not.toContain('action.devices.traits.Brightness');
       expect(response.traits).not.toContain('action.devices.traits.ColorSetting');
       expect(response.attributes).toBeDefined();
+      expect(response.attributes.commandOnlyOnOff).toBe(false);
+      expect(response.attributes.queryOnlyOnOff).toBe(false);
+      expect(response.attributes.supportsFanSpeedPercent).toBeUndefined();
       expect(response.attributes.availableThermostatModes).toBeDefined();
       expect(response.attributes.availableThermostatModes).toContain('off');
       expect(response.attributes.availableThermostatModes).toContain('heat');
@@ -62,9 +67,14 @@ describe('heaterCooler', () => {
       expect(response).toBeDefined();
       expect(response.type).toBe('action.devices.types.THERMOSTAT');
       expect(response.traits).toContain('action.devices.traits.TemperatureSetting');
+      expect(response.traits).toContain('action.devices.traits.OnOff');
+      expect(response.traits).not.toContain('action.devices.traits.FanSpeed');
       expect(response.traits).not.toContain('action.devices.traits.Brightness');
       expect(response.traits).not.toContain('action.devices.traits.ColorSetting');
       expect(response.attributes).toBeDefined();
+      expect(response.attributes.commandOnlyOnOff).toBe(false);
+      expect(response.attributes.queryOnlyOnOff).toBe(false);
+      expect(response.attributes.supportsFanSpeedPercent).toBeUndefined();
       expect(response.attributes.availableThermostatModes).toBeDefined();
       expect(response.attributes.availableThermostatModes).toContain('off');
       expect(response.attributes.availableThermostatModes).toContain('heat');
@@ -74,15 +84,40 @@ describe('heaterCooler', () => {
       expect(response.attributes.thermostatTemperatureUnit).toBeDefined();
       // await sleep(10000)
     });
+    it('heaterCooler ac', async () => {
+      const response: any = heaterCooler.sync(heaterCoolerAC);
+      expect(response).toBeDefined();
+      expect(response.type).toBe('action.devices.types.AC_UNIT');
+      expect(response.traits).toContain('action.devices.traits.TemperatureSetting');
+      expect(response.traits).toContain('action.devices.traits.OnOff');
+      expect(response.traits).toContain('action.devices.traits.FanSpeed');
+      expect(response.traits).not.toContain('action.devices.traits.Brightness');
+      expect(response.traits).not.toContain('action.devices.traits.ColorSetting');
+      expect(response.attributes).toBeDefined();
+      expect(response.attributes.commandOnlyOnOff).toBe(false);
+      expect(response.attributes.queryOnlyOnOff).toBe(false);
+      expect(response.attributes.supportsFanSpeedPercent).toBe(true);
+      expect(response.attributes.availableThermostatModes).toBeDefined();
+      expect(response.attributes.availableThermostatModes).toContain('off');
+      expect(response.attributes.availableThermostatModes).toContain('heat');
+      expect(response.attributes.availableThermostatModes).toContain('cool');
+      expect(response.attributes.availableThermostatModes).toContain('heatcool');
+      expect(response.attributes.availableThermostatModes).not.toContain('auto');
+      expect(response.attributes.thermostatTemperatureUnit).toBeDefined();
+      // await sleep(10000)
+    });
   });
+
   describe('query message', () => {
     it('heaterCooler heat and cool', async () => {
       const response = heaterCooler.query(heaterCoolerTemp);
       expect(response).toBeDefined();
       expect(response.online).toBeDefined();
+      expect(response.on).toBeDefined();
       expect(response.thermostatMode).toBeDefined();
       expect(response.thermostatTemperatureAmbient).toBeDefined();
       expect(response.thermostatTemperatureSetpoint).toBeDefined();
+      expect(response.currentFanSpeedPercent).toBeUndefined();
       // await sleep(10000)
     });
 
@@ -90,8 +125,21 @@ describe('heaterCooler', () => {
       const response = heaterCooler.query(heaterCoolerNoHeat);
       expect(response).toBeDefined();
       expect(response.online).toBeDefined();
+      expect(response.on).toBeDefined();
       expect(response.thermostatMode).toBeDefined();
       expect(response.thermostatTemperatureAmbient).toBeDefined();
+      expect(response.currentFanSpeedPercent).toBeUndefined();
+      // await sleep(10000)
+    });
+
+    it('heaterCooler ac', async () => {
+      const response = heaterCooler.query(heaterCoolerAC);
+      expect(response).toBeDefined();
+      expect(response.online).toBeDefined();
+      expect(response.on).toBeDefined();
+      expect(response.thermostatMode).toBeDefined();
+      expect(response.thermostatTemperatureAmbient).toBeDefined();
+      expect(response.currentFanSpeedPercent).toBeDefined();
       // await sleep(10000)
     });
   });
@@ -118,6 +166,30 @@ describe('heaterCooler', () => {
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('SUCCESS');
+      // await sleep(10000)
+    });
+
+    it('heaterCooler - setOnOff', async () => {
+      const response = await heaterCooler.execute(heaterCoolerTemp, commandThermostatOff);
+      expect(response).toBeDefined();
+      expect(response.ids).toBeDefined();
+      expect(response.status).toBe('SUCCESS');
+      // await sleep(10000)
+    });
+
+    it('heaterCooler - setFanSpeed', async () => {
+      const response = await heaterCooler.execute(heaterCoolerAC, commandThermostatSetFanSpeed);
+      expect(response).toBeDefined();
+      expect(response.ids).toBeDefined();
+      expect(response.status).toBe('SUCCESS');
+      // await sleep(10000)
+    });
+
+    it('heaterCooler - setFanSpeed fails', async () => {
+      const response = await heaterCooler.execute(heaterCoolerTemp, commandThermostatSetFanSpeed);
+      expect(response).toBeDefined();
+      expect(response.ids).toBeDefined();
+      expect(response.status).toBe('ERROR');
       // await sleep(10000)
     });
 
@@ -571,6 +643,184 @@ const heaterCoolerNoHeat: ServiceType = {
   getCharacteristic,
 };
 
+const heaterCoolerAC: ServiceType = {
+  aid: 13,
+  iid: 8,
+  uuid: '00000043-0000-1000-8000-0026BB765291',
+  type: 'HeaterCooler',
+  humanType: 'HeaterCooler',
+  serviceName: 'Shed Light',
+  serviceCharacteristics: [
+    {
+      aid: 13,
+      iid: 11,
+      uuid: '000000B0-0000-1000-8000-0026BB765291',
+      type: 'ConfiguredName',
+      serviceType: 'Active',
+      serviceName: 'Shed Light',
+      description: 'Configured Name',
+      value: 1,
+      format: 'string',
+      perms: ['ev', 'pr', 'pw'],
+      unit: undefined,
+      maxValue: undefined,
+      minValue: undefined,
+      minStep: undefined,
+      canRead: true,
+      canWrite: true,
+      ev: true,
+      setValue,
+      getValue,
+    },
+    {
+      aid: 13,
+      iid: 10,
+      uuid: '00000011-0000-1000-8000-0026BB765291',
+      type: 'On',
+      serviceType: 'CurrentTemperature',
+      serviceName: 'Shed Light',
+      description: 'On',
+      value: 25,
+      format: 'bool',
+      perms: ['ev', 'pr', 'pw'],
+      unit: undefined,
+      maxValue: undefined,
+      minValue: undefined,
+      minStep: undefined,
+      canRead: true,
+      canWrite: true,
+      ev: true,
+      setValue,
+      getValue,
+    },
+    {
+      aid: 13,
+      iid: 11,
+      uuid: '00000012-0000-1000-8000-0026BB765291',
+      type: 'ConfiguredName',
+      serviceType: 'HeatingThresholdTemperature',
+      serviceName: 'Shed Light',
+      description: 'Configured Name',
+      value: 19,
+      format: 'string',
+      perms: ['ev', 'pr', 'pw'],
+      unit: undefined,
+      maxValue: undefined,
+      minValue: undefined,
+      minStep: undefined,
+      canRead: true,
+      canWrite: true,
+      ev: true,
+      setValue,
+      getValue,
+    },
+    {
+      aid: 13,
+      iid: 11,
+      uuid: '00000036-0000-1000-8000-0026BB765291',
+      type: 'ConfiguredName',
+      serviceType: 'TemperatureDisplayUnits',
+      serviceName: 'Shed Light',
+      description: 'Configured Name',
+      value: 1,
+      format: 'string',
+      perms: ['ev', 'pr', 'pw'],
+      unit: undefined,
+      maxValue: undefined,
+      minValue: undefined,
+      minStep: undefined,
+      canRead: true,
+      canWrite: true,
+      ev: true,
+      setValue,
+      getValue,
+    },
+    {
+      aid: 13,
+      iid: 11,
+      uuid: '000000B2-0000-1000-8000-0026BB765291',
+      type: 'ConfiguredName',
+      serviceType: 'TargetHeaterCoolerState',
+      serviceName: 'Shed Light',
+      description: 'Configured Name',
+      value: 1,
+      format: 'string',
+      perms: ['ev', 'pr', 'pw'],
+      unit: undefined,
+      maxValue: undefined,
+      minValue: undefined,
+      minStep: undefined,
+      canRead: true,
+      canWrite: true,
+      ev: true,
+      setValue,
+      getValue,
+    },
+    {
+      aid: 13,
+      iid: 11,
+      uuid: '0000000D-0000-1000-8000-0026BB765291',
+      type: 'ConfiguredName',
+      serviceType: 'RotationSpeed',
+      serviceName: 'Shed Light',
+      description: 'Configured Name',
+      value: 0,
+      format: 'float',
+      perms: ['ev', 'pr', 'pw'],
+      unit: 'percentage',
+      maxValue: 100,
+      minValue: 0,
+      minStep: 1,
+      canRead: true,
+      canWrite: true,
+      ev: true,
+      setValue,
+      getValue,
+    },
+    {
+      aid: 13,
+      iid: 11,
+      uuid: '00000029-0000-1000-8000-0026BB765291',
+      type: 'ConfiguredName',
+      serviceType: 'CoolingThresholdTemperature',
+      serviceName: 'Shed Light',
+      description: 'Configured Name',
+      value: 1,
+      format: 'string',
+      perms: ['ev', 'pr', 'pw'],
+      unit: undefined,
+      maxValue: undefined,
+      minValue: undefined,
+      minStep: undefined,
+      canRead: true,
+      canWrite: true,
+      ev: true,
+      setValue,
+      getValue,
+    },
+  ],
+  accessoryInformation: {
+    'Manufacturer': 'Tasmota',
+    'Model': 'WiOn',
+    'Name': 'Shed Light',
+    'Serial Number': '02231D-jessie',
+    'Firmware Revision': '9.5.0tasmota',
+  },
+  values: { On: 0, ConfiguredName: 'Shed Light' },
+  linked: undefined,
+  instance: {
+    name: 'homebridge',
+    username: '1C:22:3D:E3:CF:34',
+    ipAddress: '192.168.1.11',
+    port: 46283,
+
+  },
+  uniqueId: '664195d5556f1e0b424ed32bcd863ec8954c76f8ab81cc399f0e24f8827806d1',
+  refreshCharacteristics,
+  setCharacteristic,
+  getCharacteristic,
+};
+
 const commandOnOff = {
   devices: [
     {
@@ -767,6 +1017,52 @@ const commandThermostatTemperatureSetRange = {
       command: 'action.devices.commands.ThermostatSetMode',
       params: {
         thermostatMode: 'off',
+      },
+    },
+  ],
+};
+
+const commandThermostatOff = {
+  devices: [
+    {
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
+      },
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
+  ],
+  execution: [
+    {
+      command: 'action.devices.commands.OnOff',
+      params: {
+        on: false,
+      },
+    },
+  ],
+};
+
+const commandThermostatSetFanSpeed = {
+  devices: [
+    {
+      customData: {
+        aid: 75,
+        iid: 8,
+        instanceIpAddress: '192.168.1.11',
+        instancePort: 46283,
+        instanceUsername: '1C:22:3D:E3:CF:34',
+      },
+      id: 'b9245954ec41632a14076df3bbb7336f756c17ca4b040914a593e14d652d5738',
+    },
+  ],
+  execution: [
+    {
+      command: 'action.devices.commands.SetFanSpeed',
+      params: {
+        fanSpeedPercent: 50,
       },
     },
   ],

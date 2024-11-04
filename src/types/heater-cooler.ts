@@ -61,6 +61,7 @@ export class HeaterCooler extends ghToHap implements ghToHap_t {
       online: true,
       on: !!activeState,
       thermostatMode,
+      activeThermostatMode: thermostatMode,
       thermostatTemperatureAmbient: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentTemperature).value,
     } as any;
 
